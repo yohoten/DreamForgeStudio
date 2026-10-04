@@ -4,6 +4,8 @@
 
 面向 **HTML5 页游** 的 AI Agent 工作室编排平台。等距办公室场景 + 企业沙盘模拟——将不同部门/角色的 AI Agent 串成可控流水线，通过 **OpenAI 兼容 HTTP API** 连接本地或云端推理端点。
 
+![{162B2583-C5B7-4F04-A7EB-331BB5D98988}](C:\Users\yohoten\AppData\Local\Packages\MicrosoftWindows.Client.Core_cw5n1h2txyewy\TempState\ScreenClip\{162B2583-C5B7-4F04-A7EB-331BB5D98988}.png)
+
 ## 快速开始
 
 ```bash
@@ -85,4 +87,5 @@ assets/portraits/*.png             — Agent 立绘（128×128, 6 张）
 - **国际化** — i18n 中/英/日
 - **端到端测试** — Vitest + Playwright
 - **移动端适配** — 响应式布局
+
 # DreamForgeStudio
