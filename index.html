@@ -4,316 +4,894 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DreamForgeStudio · 造梦游戏工坊</title>
-<meta name="description" content="面向 HTML5 页游与微信/抖音小游戏的 AI Agent 工作室编排平台——把部门与角色编成可控流水线，用一间等距办公室盯住它们干活。" />
+<meta name="description" content="面向 HTML5 页游与微信/抖音小游戏的 AI Agent 工作室编排平台——把 7 个部门、约 40 个 Agent 接成可控流水线，用一间等距办公室盯住它们干活。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  :root{
-    --bg:#0b1020; --bg-1:#0a0e1a; --bg-2:#111827;
-    --line:rgba(231,236,255,.10); --line-2:rgba(231,236,255,.18);
-    --text:#e7ecff; --muted:#93a0c4; --dim:#6b789d;
-    --cyan:#06b6d4; --indigo:#6366f1; --green:#10b981;
-    --amber:#f59e0b; --pink:#ec4899; --red:#ef4444;
-    --mono:ui-monospace,SFMono-Regular,"SF Mono",Consolas,"Liberation Mono",Menlo,monospace;
-    --sans:"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{
-    margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
-    font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased;
-    background-image:
-      radial-gradient(900px 420px at 12% -8%, rgba(99,102,241,.16), transparent 62%),
-      radial-gradient(760px 380px at 92% 4%, rgba(6,182,212,.12), transparent 60%);
-    background-attachment:fixed;
-  }
-  .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+/* ============================================================
+   设计令牌
+   底色沿用项目自身 apps/studio-web/src/style.css 的深色体系，
+   部门色直接取自 main.ts 的 deptColorsShort，不另造一套配色。
+   ============================================================ */
+:root{
+  /* —— 表面 —— */
+  --color-bg:#0b1020;
+  --color-surface:#0a0e1a;
+  --color-surface-2:#111827;
+  --color-text:#e7ecff;
+  --color-muted:#93a0c4;
+  /* dim 用于 12px 小字，实测 #6b789d 对底色仅 4.33:1 不达标，提亮至 5.5:1 */
+  --color-dim:#7c8ab0;
+  --color-border:rgba(231,236,255,.10);
+  --color-border-strong:rgba(231,236,255,.20);
 
-  /* ---- header ---- */
-  header{border-bottom:1px solid var(--line);padding:22px 0;position:sticky;top:0;
-    background:rgba(11,16,32,.82);backdrop-filter:blur(12px);z-index:20}
-  .hd{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .mark{width:30px;height:30px;flex:0 0 auto}
-  .hd strong{font-size:15px;letter-spacing:.2px}
-  .hd nav{display:flex;gap:20px;margin-left:auto;flex-wrap:wrap}
-  .hd nav a{color:var(--muted);text-decoration:none;font-size:13.5px}
-  .hd nav a:hover{color:var(--text)}
+  /* —— 唯一强调色：只给关键动作与链接 —— */
+  --color-accent:#22d3ee;
+  --color-accent-deep:#06b6d4;
+  --color-accent-soft:rgba(34,211,238,.13);
+  --color-warn:#f59e0b;
 
-  /* ---- hero ---- */
-  .hero{padding:74px 0 46px}
-  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--cyan);
-    text-transform:uppercase;margin-bottom:18px}
-  h1{font-size:clamp(34px,5.4vw,58px);line-height:1.08;margin:0 0 6px;letter-spacing:-.02em;font-weight:650}
-  .cn{font-size:clamp(19px,2.6vw,26px);color:var(--muted);font-weight:500;letter-spacing:.06em;margin:0 0 26px}
-  .lede{font-size:17.5px;color:#c3ccec;max-width:66ch;margin:0 0 12px}
-  .lede em{color:var(--text);font-style:normal;border-bottom:1px solid var(--line-2)}
-  .targets{display:flex;gap:9px;flex-wrap:wrap;margin:30px 0 34px}
-  .chip{font-family:var(--mono);font-size:12.5px;color:var(--muted);
-    border:1px solid var(--line-2);border-radius:999px;padding:5px 13px;background:rgba(231,236,255,.03)}
+  /* —— 部门色（来源：main.ts deptColorsShort）—— */
+  --dept-leadership:#818cf8;
+  --dept-design:#22d3ee;
+  --dept-programming:#34d399;
+  --dept-art:#f472b6;
+  --dept-narrative:#fbbf24;
+  --dept-qa:#f87171;
+  --dept-other:#94a3b8;
 
-  /* ---- endpoints ---- */
-  .local{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:8px}
-  .addr{display:flex;align-items:baseline;gap:10px;border:1px solid var(--line-2);
-    border-radius:10px;padding:11px 15px;background:rgba(10,14,26,.6)}
-  .addr .k{font-size:11.5px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
-  .addr .v{font-family:var(--mono);font-size:13.5px;color:var(--cyan)}
-  .addr .v:hover{text-decoration:underline}
+  /* —— 字阶（1.25 模数）—— */
+  --fs-xs:12px; --fs-sm:13.5px; --fs-base:15px; --fs-md:17px;
+  --fs-lg:20px; --fs-xl:26px;
+  --fs-2xl:clamp(30px,4.2vw,42px);
+  --fs-3xl:clamp(40px,6.4vw,74px);
 
-  /* ---- metrics ---- */
-  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
-    gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;
-    overflow:hidden;margin:52px 0 0}
-  .metric{background:var(--bg-1);padding:20px 18px}
-  .metric b{display:block;font-family:var(--mono);font-size:26px;line-height:1.15;
-    color:var(--text);font-weight:600;letter-spacing:-.02em}
-  .metric span{display:block;font-size:12.5px;color:var(--dim);margin-top:5px}
+  /* —— 间距梯度 —— */
+  --sp-1:4px; --sp-2:8px; --sp-3:16px; --sp-4:24px;
+  --sp-5:40px; --sp-6:64px; --sp-7:96px;
 
-  /* ---- sections ---- */
-  section{padding:66px 0;border-top:1px solid var(--line);margin-top:56px}
-  .tagrow{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
-  .num{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  h2{font-size:26px;margin:0 0 10px;letter-spacing:-.01em;font-weight:600}
-  .sub{color:var(--muted);max-width:70ch;margin:0 0 34px;font-size:15px}
+  --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+  --shadow-1:0 2px 8px rgba(3,6,18,.50);
+  --shadow-2:0 8px 28px rgba(3,6,18,.56);
+  --shadow-3:0 24px 64px rgba(3,6,18,.62);
 
-  /* ---- cards ---- */
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:14px}
-  .card{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--bg-1);
-    transition:border-color .18s, transform .18s}
-  .card:hover{border-color:var(--line-2);transform:translateY(-2px)}
-  .card h3{margin:0 0 9px;font-size:15.5px;font-weight:600;display:flex;align-items:center;gap:9px}
-  .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
-  .card p{margin:0;font-size:13.8px;color:var(--muted);line-height:1.68}
-  .card .meta{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:12px;
-    padding-top:11px;border-top:1px dashed var(--line)}
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --dur-fast:180ms; --dur-base:340ms; --dur-slow:680ms;
 
-  /* ---- pipeline ---- */
-  .pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-  .stage{border:1px solid var(--line);border-radius:11px;padding:17px 16px;background:var(--bg-1);position:relative}
-  .stage .no{font-family:var(--mono);font-size:11px;color:var(--dim)}
-  .stage .nm{font-size:15px;font-weight:600;margin:3px 0 7px}
-  .stage .tip{font-size:12.5px;color:var(--muted);line-height:1.6}
-  .stage.is-bottleneck{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.05)}
-  .stage.is-bottleneck .nm::after{content:"瓶颈";font-size:10.5px;color:var(--amber);
-    border:1px solid rgba(245,158,11,.45);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
-  .note{font-size:13px;color:var(--dim);border-left:2px solid var(--cyan);
-    padding:2px 0 2px 13px;margin:0}
+  /* 展示字：Chakra Petch 只作用于拉丁字形（英文标题），中文自动回落到本地黑体 */
+  --font-display:'Chakra Petch','PingFang SC','Microsoft YaHei','Hiragino Sans GB',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  --font-body:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif;
+}
 
-  /* ---- tiers ---- */
-  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-  .tier{border:1px solid var(--line);border-radius:11px;padding:17px;background:var(--bg-1)}
-  .tier .t{font-family:var(--mono);font-size:13px;color:var(--cyan);margin-bottom:9px}
-  .tier ul{margin:0;padding-left:17px;font-size:13.3px;color:var(--muted)}
-  .tier li{margin:3px 0}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{
+  margin:0;background:var(--color-bg);color:var(--color-text);
+  font-family:var(--font-body);font-size:var(--fs-base);line-height:1.72;
+  letter-spacing:.02em;-webkit-font-smoothing:antialiased;
+}
 
-  /* ---- code ---- */
-  .terminal{border:1px solid var(--line-2);border-radius:12px;overflow:hidden;background:var(--bg-1)}
-  .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--line);
-    background:rgba(231,236,255,.025)}
-  .bar i{width:9px;height:9px;border-radius:50%;display:block}
-  .bar .txt{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-left:8px}
-  pre{margin:0;padding:18px 20px;overflow-x:auto;font-size:13.4px;line-height:1.85}
-  code{font-family:var(--mono)}
-  pre code{color:#d5ddf7}
-  .c-dim{color:#5f6c91} .c-cy{color:var(--cyan)} .c-gr{color:var(--green)} .c-am{color:var(--amber)}
+/* ============================================================
+   氛围层：网格地平线 + 渐变辉光 + 噪点
+   复古未来方向的三件套，全部 fixed 且无指针事件。
+   ============================================================ */
+.atmos{position:fixed;inset:0;pointer-events:none;z-index:0}
+.atmos::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(58rem 34rem at 10% -12%, rgba(99,102,241,.20), transparent 62%),
+    radial-gradient(46rem 30rem at 98% 2%, rgba(34,211,238,.13), transparent 58%),
+    radial-gradient(40rem 26rem at 50% 108%, rgba(244,114,182,.10), transparent 60%);
+}
+/* 等距网格纹样：两组斜线交叠，模拟办公室地板延伸到背景 */
+.atmos::after{
+  content:"";position:absolute;inset:0;opacity:.30;
+  background-image:
+    repeating-linear-gradient(60deg, rgba(231,236,255,.045) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(-60deg, rgba(231,236,255,.045) 0 1px, transparent 1px 42px);
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.85), transparent 72%);
+}
+.grain{
+  position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.045;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{position:relative;z-index:2;max-width:1140px;margin:0 auto;padding:0 28px}
 
-  /* ---- table / stack ---- */
-  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:30px}
-  .kv{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:13.6px;align-items:baseline}
-  .kv dt{font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap}
-  .kv dd{margin:0;color:#c9d2ee}
-  .tree{font-family:var(--mono);font-size:13px;line-height:2.05;color:var(--muted)}
-  .tree a{color:#c9d2ee;text-decoration:none;border-bottom:1px solid transparent}
-  .tree a:hover{color:var(--cyan);border-bottom-color:var(--cyan)}
-  .tree .d{color:var(--dim)}
+/* —— 焦点圈：全站统一，2px + 2px 偏移 —— */
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;border-radius:3px}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{text-decoration:underline}
 
-  footer{border-top:1px solid var(--line);padding:34px 0 56px;color:var(--dim);font-size:13px}
-  footer p{margin:0 0 7px}
+/* ============================================================
+   页眉
+   ============================================================ */
+header{
+  position:sticky;top:0;z-index:30;border-bottom:1px solid var(--color-border);
+  background:rgba(11,16,32,.86);backdrop-filter:blur(14px);
+}
+.hd{display:flex;align-items:center;gap:14px;min-height:66px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.hd strong{font-family:var(--font-display);font-size:16.5px;font-weight:700;letter-spacing:.01em}
+.hd nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.hd nav a{
+  color:var(--color-muted);font-size:var(--fs-sm);padding:8px 12px;border-radius:var(--radius-sm);
+  transition:color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+}
+.hd nav a:hover,.hd nav a:focus-visible{color:var(--color-text);background:rgba(231,236,255,.06);text-decoration:none}
 
-  @media (max-width:640px){
-    .wrap{padding:0 18px} .hero{padding:48px 0 34px} section{padding:48px 0}
-    .hd nav{display:none} .metrics{grid-template-columns:repeat(2,1fr)}
-  }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ============================================================
+   Hero：非对称双栏，右侧等距办公室冲出栅格
+   ============================================================ */
+.hero{
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  gap:var(--sp-5);align-items:center;padding:var(--sp-6) 0 var(--sp-5);
+}
+.eyebrow{
+  font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--color-accent);margin:0 0 var(--sp-4);
+  display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--color-accent-deep),transparent)}
+h1{
+  font-family:var(--font-display);font-weight:700;
+  font-size:var(--fs-3xl);line-height:.98;letter-spacing:-.035em;
+  margin:0 0 var(--sp-2);
+  background:linear-gradient(174deg,#ffffff 8%,var(--color-text) 42%,#8fa0cf 108%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.cn{
+  font-family:var(--font-body);font-size:var(--fs-md);color:var(--color-muted);
+  letter-spacing:.34em;margin:0 0 var(--sp-4);font-weight:500;
+}
+.lede{font-size:var(--fs-md);color:#c3ccec;max-width:58ch;margin:0 0 var(--sp-3)}
+.lede em{
+  font-style:normal;color:var(--color-text);
+  border-bottom:1px solid var(--color-accent);padding-bottom:1px;
+}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:var(--sp-4) 0 var(--sp-5)}
+.chip{
+  font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--color-muted);
+  border:1px solid var(--color-border-strong);border-radius:999px;
+  padding:6px 13px;background:rgba(231,236,255,.035);
+  transition:border-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out);
+}
+.chip:hover{border-color:var(--color-accent);color:var(--color-text)}
+
+/* 端点地址条：可直接点开 */
+.local{display:flex;gap:10px;flex-wrap:wrap}
+.addr{
+  display:flex;align-items:baseline;gap:10px;padding:12px 16px;
+  border:1px solid var(--color-border-strong);border-radius:var(--radius-md);
+  background:rgba(10,14,26,.72);min-height:44px;
+  transition:border-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+}
+.addr:hover{border-color:var(--color-accent);transform:translateY(-2px);text-decoration:none}
+.addr .k{font-family:var(--font-mono);font-size:10.5px;color:var(--color-dim);letter-spacing:.14em;text-transform:uppercase}
+.addr .v{font-family:var(--font-mono);font-size:13.5px;color:var(--color-accent)}
+
+/* Hero 主视觉 */
+.hero-art{position:relative;justify-self:center;width:100%;max-width:620px}
+.hero-art svg{width:100%;height:auto;display:block;overflow:visible}
+.art-cap{
+  font-family:var(--font-mono);font-size:11px;color:var(--color-dim);
+  text-align:right;margin-top:6px;letter-spacing:.06em;
+}
+
+/* ============================================================
+   指标条：数字 + 迷你条，等宽 tabular-nums
+   ============================================================ */
+.metrics{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;background:var(--color-border);border:1px solid var(--color-border);
+  border-radius:var(--radius-lg);overflow:hidden;margin-top:var(--sp-5);
+}
+.metric{background:var(--color-surface);padding:var(--sp-4) var(--sp-3) var(--sp-3)}
+.metric b{
+  display:block;font-family:var(--font-display);font-weight:700;
+  font-size:30px;line-height:1.1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;
+}
+.metric b small{font-size:14px;color:var(--color-dim);font-weight:500}
+.metric span{display:block;font-size:var(--fs-xs);color:var(--color-dim);margin-top:5px}
+.metric i{display:block;height:2px;margin-top:10px;border-radius:2px;background:var(--mc,var(--color-accent));opacity:.72}
+
+/* ============================================================
+   章节
+   ============================================================ */
+section{padding:var(--sp-6) 0;border-top:1px solid var(--color-border)}
+.tagrow{display:flex;align-items:baseline;gap:14px;margin-bottom:var(--sp-2)}
+.num{
+  font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--color-dim);
+  border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);
+  padding:3px 9px;flex:0 0 auto;
+}
+h2{
+  font-family:var(--font-display);font-weight:600;font-size:var(--fs-xl);
+  margin:0;letter-spacing:-.01em;
+}
+.sub{color:var(--color-muted);max-width:70ch;margin:var(--sp-2) 0 var(--sp-5);font-size:var(--fs-sm)}
+
+/* ============================================================
+   能力卡：图标有信息含义，非通用装饰
+   ============================================================ */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:14px}
+.card{
+  border:1px solid var(--color-border);border-radius:var(--radius-md);
+  padding:var(--sp-4);background:var(--color-surface);
+  position:relative;overflow:hidden;
+  transition:border-color var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out);
+}
+/* 顶部一道部门色细线，hover 时扫满：比单纯变亮更有反馈 */
+.card::before{
+  content:"";position:absolute;left:0;top:0;height:2px;width:100%;
+  background:var(--cc,var(--color-accent));transform:scaleX(.16);transform-origin:left;
+  transition:transform var(--dur-base) var(--ease-out);
+}
+.card:hover{
+  border-color:var(--color-border-strong);transform:translateY(-3px);box-shadow:var(--shadow-2);
+}
+.card:hover::before{transform:scaleX(1)}
+.card h3{
+  margin:0 0 10px;font-size:var(--fs-base);font-weight:600;
+  display:flex;align-items:center;gap:10px;
+}
+.card .ico{flex:0 0 auto;width:26px;height:26px;color:var(--cc,var(--color-accent))}
+.card p{margin:0;font-size:var(--fs-sm);color:var(--color-muted);line-height:1.7}
+.card .meta{
+  font-family:var(--font-mono);font-size:11px;color:var(--color-dim);
+  margin-top:13px;padding-top:11px;border-top:1px dashed var(--color-border);
+}
+
+/* ============================================================
+   流水线
+   ============================================================ */
+.pipe-flow{width:100%;height:auto;display:block;margin-bottom:var(--sp-3);overflow:visible}
+.flow-line{
+  stroke-dasharray:5 7;animation:flow 1.4s linear infinite;
+}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.stage{
+  border:1px solid var(--color-border);border-radius:var(--radius-md);
+  padding:var(--sp-3) var(--sp-3) 17px;background:var(--color-surface);
+  position:relative;
+}
+.stage .no{font-family:var(--font-mono);font-size:10.5px;color:var(--color-dim);letter-spacing:.1em}
+.stage .nm{font-size:var(--fs-base);font-weight:600;margin:3px 0 7px;display:flex;align-items:center;gap:8px}
+.stage .nm i{width:8px;height:8px;border-radius:2px;background:var(--sc);flex:0 0 auto}
+.stage .tip{font-size:var(--fs-xs);color:var(--color-muted);line-height:1.65}
+.stage.is-bottleneck{border-color:rgba(245,158,11,.46);background:rgba(245,158,11,.05)}
+.stage.is-bottleneck .nm::after{
+  content:"瓶颈";font-family:var(--font-mono);font-size:10px;color:var(--color-warn);
+  border:1px solid rgba(245,158,11,.45);border-radius:4px;padding:1px 6px;margin-left:2px;
+}
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin-bottom:var(--sp-4)}
+.note{
+  font-size:var(--fs-sm);color:var(--color-dim);
+  border-left:2px solid var(--color-accent);padding:2px 0 2px 14px;margin:0;
+}
+
+/* Sprint 时间轴 */
+.sprint{display:flex;gap:6px;margin:var(--sp-4) 0 var(--sp-3);flex-wrap:wrap}
+.sprint div{
+  flex:1 1 0;min-width:76px;border:1px solid var(--color-border);border-radius:var(--radius-sm);
+  padding:11px 10px;background:var(--color-surface);
+}
+.sprint .d{font-family:var(--font-mono);font-size:10.5px;color:var(--color-dim);display:block}
+.sprint .p{font-size:var(--fs-xs);color:var(--color-muted);display:block;margin-top:3px}
+.sprint div.on{border-color:var(--color-accent);background:var(--color-accent-soft)}
+.sprint div.on .p{color:var(--color-text)}
+
+/* ============================================================
+   部门色带
+   ============================================================ */
+.depts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:var(--sp-4)}
+.dept{
+  border:1px solid var(--color-border);border-radius:var(--radius-md);
+  padding:14px 15px;background:var(--color-surface);
+  border-left:3px solid var(--dc);
+  transition:transform var(--dur-base) var(--ease-out),background var(--dur-base) var(--ease-out);
+}
+.dept:hover{transform:translateY(-2px);background:var(--color-surface-2)}
+.dept b{display:block;font-size:var(--fs-sm);font-weight:600}
+.dept span{display:block;font-family:var(--font-mono);font-size:10.5px;color:var(--color-dim);margin-top:4px}
+
+/* 设施条：10 个公共设施，是这间办公室最有性格的部分 */
+.facilities{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--sp-3)}
+.fac{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--color-muted);
+  border:1px solid var(--color-border);border-radius:999px;padding:6px 13px;
+  background:rgba(231,236,255,.03);
+}
+
+/* ============================================================
+   模型路由
+   ============================================================ */
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(214px,1fr));gap:12px}
+.tier{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--sp-4);background:var(--color-surface)}
+.tier.is-default{border-color:rgba(34,211,238,.42);box-shadow:inset 0 0 0 1px rgba(34,211,238,.10)}
+.tier .t{
+  font-family:var(--font-mono);font-size:var(--fs-sm);color:var(--color-accent);
+  margin-bottom:11px;display:flex;align-items:center;gap:8px;
+}
+.tier .t i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.tier ul{margin:0;padding-left:17px;font-size:var(--fs-sm);color:var(--color-muted)}
+.tier li{margin:4px 0}
+
+/* ============================================================
+   终端
+   ============================================================ */
+.terminal{border:1px solid var(--color-border-strong);border-radius:var(--radius-md);overflow:hidden;background:var(--color-surface);box-shadow:var(--shadow-2)}
+.bar{
+  display:flex;align-items:center;gap:7px;padding:11px 15px;
+  border-bottom:1px solid var(--color-border);background:rgba(231,236,255,.028);
+}
+.bar i{width:9px;height:9px;border-radius:50%;display:block}
+.bar .txt{font-family:var(--font-mono);font-size:11px;color:var(--color-dim);margin-left:8px}
+pre{margin:0;padding:var(--sp-4) 20px;overflow-x:auto;font-size:13.4px;line-height:1.9}
+code{font-family:var(--font-mono)}
+pre code{color:#d5ddf7}
+.c-dim{color:#7c8ab0} .c-cy{color:var(--color-accent)} .c-gr{color:#34d399} .c-am{color:var(--color-warn)}
+
+/* ============================================================
+   技术栈 / 仓库树
+   ============================================================ */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:var(--sp-5)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:11px 18px;font-size:var(--fs-sm);align-items:baseline;margin:0}
+.kv dt{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--color-dim);white-space:nowrap}
+.kv dd{margin:0;color:#c9d2ee}
+.tree{font-family:var(--font-mono);font-size:13px;line-height:2.15;color:var(--color-muted)}
+.tree a{color:#c9d2ee;text-decoration:none;border-bottom:1px solid transparent;transition:color var(--dur-fast) var(--ease-out)}
+.tree a:hover{color:var(--color-accent);border-bottom-color:var(--color-accent)}
+.tree .d{color:var(--color-dim)}
+
+footer{border-top:1px solid var(--color-border);padding:var(--sp-5) 0 var(--sp-6);color:var(--color-dim);font-size:var(--fs-xs)}
+footer p{margin:0 0 7px}
+
+/* ============================================================
+   动效：入场错峰 + 滚动揭示
+   ============================================================ */
+.reveal{opacity:0;transform:translateY(22px)}
+.reveal.in{opacity:1;transform:none;transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out)}
+@media (prefers-reduced-motion:no-preference){
+  .hero > *{animation:rise var(--dur-slow) var(--ease-out) both}
+  .hero > *:nth-child(1){animation-delay:0ms}
+  .hero > *:nth-child(2){animation-delay:90ms}
+  .hero > *:nth-child(3){animation-delay:180ms}
+  .hero > *:nth-child(4){animation-delay:270ms}
+  .hero > *:nth-child(5){animation-delay:360ms}
+  .hero > *:nth-child(6){animation-delay:450ms}
+}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .hero > *{animation:none}
+  .flow-line{animation:none}
+  html{scroll-behavior:auto}
+}
+
+/* ============================================================
+   响应式：构成决策有明确的移动端答案，而非单纯堆叠
+   ============================================================ */
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:var(--sp-5);padding-top:var(--sp-5)}
+  .hero-art{order:-1;max-width:520px;margin:0 auto}
+  .art-cap{text-align:center}
+}
+@media (max-width:640px){
+  .wrap{padding:0 18px}
+  section{padding:var(--sp-5) 0}
+  .hd nav{display:none}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .metric b{font-size:25px}
+  .lede{font-size:var(--fs-base)}
+}
 </style>
 </head>
 <body>
+<div class="atmos" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 
 <header>
   <div class="wrap hd">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#0b1020" stroke="rgba(231,236,255,.16)"/>
-      <path d="M8 21.5 L13 12.5 L18 18 L24 10.5" fill="none" stroke="#06b6d4" stroke-width="1.9"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="24" cy="10.5" r="2.3" fill="#6366f1"/>
-      <circle cx="13" cy="12.5" r="1.7" fill="#10b981"/>
-    </svg>
-    <strong>DreamForgeStudio</strong>
-    <nav>
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#0b1020" stroke="rgba(231,236,255,.18)"/>
+        <path d="M8 21.5 L13 12.5 L18 18 L24 10.5" fill="none" stroke="#22d3ee" stroke-width="1.9"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="10.5" r="2.3" fill="#818cf8"/>
+        <circle cx="13" cy="12.5" r="1.7" fill="#34d399"/>
+      </svg>
+      <strong>DreamForgeStudio</strong>
+    </div>
+    <nav aria-label="页面导航">
+      <a href="#office">办公室</a>
       <a href="#capability">能力</a>
       <a href="#pipeline">流水线</a>
       <a href="#routing">模型路由</a>
+      <a href="#arch">架构</a>
       <a href="#start">运行</a>
-      <a href="#repo">仓库结构</a>
+      <a href="#repo">仓库</a>
     </nav>
   </div>
 </header>
 
-<div class="wrap hero">
-  <p class="eyebrow">AI Agent Studio Orchestration</p>
-  <h1>DreamForgeStudio</h1>
-  <p class="cn">造梦游戏工坊</p>
+<main class="wrap">
 
-  <p class="lede">
-    面向 <em>HTML5 页游</em>、<em>微信小游戏</em> 与 <em>抖音小游戏</em> 的 AI Agent 工作室编排平台。
-    把不同部门、不同角色的 AI Agent 接成一条可控流水线，再用一间等距办公室把它们的走动、
-    排队、交付和吵架都摆在眼前。
-  </p>
-  <p class="lede">
-    Agent 通过 <em>OpenAI 兼容 HTTP API</em> 连接本地推理端点（Ollama / vLLM / LM Studio）
-    或云端模型；本地跑不动时自动外包到云端，云端太贵时自动退回本地。
-  </p>
+  <!-- ===================== HERO ===================== -->
+  <div class="hero">
+    <div>
+      <p class="eyebrow">AI Agent Studio Orchestration</p>
+      <h1>DreamForgeStudio</h1>
+      <p class="cn">造梦游戏工坊</p>
+      <p class="lede">
+        面向 <em>HTML5 页游</em>、<em>微信小游戏</em> 与 <em>抖音小游戏</em> 的 AI Agent 工作室编排平台。
+        把 7 个部门、约 40 个 Agent 接成一条可控流水线，再用一间等距办公室把它们的走动、排队、
+        交付和卡壳都摆在眼前。
+      </p>
+      <p class="lede">
+        Agent 通过 <em>OpenAI 兼容 HTTP API</em> 连接本地推理端点（Ollama / vLLM / LM Studio）
+        或云端模型；本地跑不动时自动外包到云端，云端太贵时自动退回本地。
+      </p>
+      <div class="chips">
+        <span class="chip">H5 网页游戏</span>
+        <span class="chip">微信小游戏</span>
+        <span class="chip">抖音小游戏</span>
+        <span class="chip">多 Agent 流水线</span>
+        <span class="chip">企业沙盘模拟</span>
+      </div>
+      <div class="local">
+        <a class="addr" href="http://127.0.0.1:5173" target="_blank" rel="noopener">
+          <span class="k">前端</span><span class="v">127.0.0.1:5173</span>
+        </a>
+        <a class="addr" href="http://127.0.0.1:8787" target="_blank" rel="noopener">
+          <span class="k">后端</span><span class="v">127.0.0.1:8787</span>
+        </a>
+        <a class="addr" href="http://127.0.0.1:5173/auth.html" target="_blank" rel="noopener">
+          <span class="k">登录</span><span class="v">/auth.html</span>
+        </a>
+      </div>
+    </div>
 
-  <div class="targets">
-    <span class="chip">H5 网页游戏</span>
-    <span class="chip">微信小游戏</span>
-    <span class="chip">抖音小游戏</span>
-    <span class="chip">多 Agent 流水线</span>
-    <span class="chip">企业沙盘模拟</span>
+    <!-- 主视觉：手绘等距办公室。等距投影公式 x=(ix-iy)*50, y=(ix+iy)*25 -->
+    <div class="hero-art">
+      <svg viewBox="0 0 620 430" role="img" aria-label="等距办公室示意图：地板网格上分布策划、程序、美术、QA 四个工位与会议室、服务器机柜，Agent 在其间移动">
+        <defs>
+          <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#141b33"/><stop offset="100%" stop-color="#0a0e1a"/>
+          </linearGradient>
+          <linearGradient id="deskT" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1f2a4a"/><stop offset="100%" stop-color="#161e38"/>
+          </linearGradient>
+        </defs>
+
+        <!-- 地板菱形 -->
+        <polygon points="310,150 510,250 310,350 110,250" fill="url(#floorG)" stroke="rgba(231,236,255,.16)" stroke-width="1.2"/>
+        <!-- 网格：沿 ix 方向 -->
+        <g stroke="rgba(231,236,255,.07)" stroke-width="1">
+          <path d="M310,150 510,250"/><path d="M260,175 460,275"/><path d="M210,200 410,300"/>
+          <path d="M160,225 360,325"/><path d="M110,250 310,350"/>
+        </g>
+        <!-- 网格：沿 iy 方向 -->
+        <g stroke="rgba(231,236,255,.07)" stroke-width="1">
+          <path d="M310,150 110,250"/><path d="M360,175 160,275"/><path d="M410,200 210,300"/>
+          <path d="M460,225 260,325"/><path d="M510,250 310,350"/>
+        </g>
+
+        <!-- 流水线走向：策划 → 程序 → 美术 → QA，虚线流动 -->
+        <path class="flow-line" d="M310,196 410,236 310,286 210,246" fill="none"
+              stroke="#22d3ee" stroke-width="1.6" opacity=".72" stroke-linecap="round"/>
+
+        <!-- 工位 1：策划/设计（cyan）-->
+        <g>
+          <polygon points="310,162 342,178 310,194 278,178" fill="#1a2340" stroke="rgba(231,236,255,.14)"/>
+          <polygon points="278,178 310,194 310,216 278,200" fill="#131a30" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="342,178 310,194 310,216 342,200" fill="#18203a" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="310,155 324,162 310,169 296,162" fill="#22d3ee" opacity=".85"/>
+          <polygon points="296,162 310,169 310,185 296,178" fill="#0e7490" opacity=".8"/>
+          <polygon points="324,162 310,169 310,185 324,178" fill="#0891b2" opacity=".8"/>
+        </g>
+
+        <!-- 工位 2：程序/工程（green）-->
+        <g>
+          <polygon points="410,212 442,228 410,244 378,228" fill="#1a2340" stroke="rgba(231,236,255,.14)"/>
+          <polygon points="378,228 410,244 410,266 378,250" fill="#131a30" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="442,228 410,244 410,266 442,250" fill="#18203a" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="410,205 424,212 410,219 396,212" fill="#34d399" opacity=".85"/>
+          <polygon points="396,212 410,219 410,235 396,228" fill="#047857" opacity=".8"/>
+          <polygon points="424,212 410,219 410,235 424,228" fill="#059669" opacity=".8"/>
+        </g>
+
+        <!-- 工位 3：美术/音频（pink）-->
+        <g>
+          <polygon points="210,212 242,228 210,244 178,228" fill="#1a2340" stroke="rgba(231,236,255,.14)"/>
+          <polygon points="178,228 210,244 210,266 178,250" fill="#131a30" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="242,228 210,244 210,266 242,250" fill="#18203a" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="210,205 224,212 210,219 196,212" fill="#f472b6" opacity=".85"/>
+          <polygon points="196,212 210,219 210,235 196,228" fill="#9d174d" opacity=".8"/>
+          <polygon points="224,212 210,219 210,235 224,228" fill="#be185d" opacity=".8"/>
+        </g>
+
+        <!-- 工位 4：QA/发布（red）-->
+        <g>
+          <polygon points="310,262 342,278 310,294 278,278" fill="#1a2340" stroke="rgba(231,236,255,.14)"/>
+          <polygon points="278,278 310,294 310,316 278,300" fill="#131a30" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="342,278 310,294 310,316 342,300" fill="#18203a" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="310,255 324,262 310,269 296,262" fill="#f87171" opacity=".85"/>
+          <polygon points="296,262 310,269 310,285 296,278" fill="#991b1b" opacity=".8"/>
+          <polygon points="324,262 310,269 310,285 324,278" fill="#b91c1c" opacity=".8"/>
+        </g>
+
+        <!-- 会议室（玻璃墙，indigo）-->
+        <g>
+          <polygon points="410,268 452,290 410,312 368,290" fill="rgba(129,140,248,.16)" stroke="rgba(129,140,248,.55)" stroke-width="1.3"/>
+          <polygon points="368,290 410,312 410,344 368,322" fill="rgba(129,140,248,.10)" stroke="rgba(129,140,248,.34)"/>
+          <polygon points="452,290 410,312 410,344 452,322" fill="rgba(129,140,248,.13)" stroke="rgba(129,140,248,.34)"/>
+          <ellipse cx="410" cy="290" rx="13" ry="6.5" fill="none" stroke="#818cf8" stroke-width="1.4" opacity=".9"/>
+        </g>
+
+        <!-- 服务器机柜（amber 指示灯）-->
+        <g>
+          <polygon points="210,268 226,276 210,284 194,276" fill="#1a2340" stroke="rgba(231,236,255,.14)"/>
+          <polygon points="194,276 210,284 210,330 194,322" fill="#131a30" stroke="rgba(231,236,255,.10)"/>
+          <polygon points="226,276 210,284 210,330 226,322" fill="#18203a" stroke="rgba(231,236,255,.10)"/>
+          <circle cx="204" cy="292" r="1.9" fill="#34d399"/>
+          <circle cx="204" cy="300" r="1.9" fill="#fbbf24">
+            <animate attributeName="opacity" values="1;.25;1" dur="1.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="204" cy="308" r="1.9" fill="#22d3ee"/>
+        </g>
+
+        <!-- 移动的 Agent：等距小人（头 + 身 + 影）-->
+        <g>
+          <ellipse cx="310" cy="232" rx="7" ry="3.4" fill="rgba(0,0,0,.34)"/>
+          <path d="M305,229 L315,229 L316,214 L304,214 Z" fill="#22d3ee" opacity=".92"/>
+          <circle cx="310" cy="209" r="4.6" fill="#e7ecff"/>
+        </g>
+        <g>
+          <ellipse cx="360" cy="258" rx="7" ry="3.4" fill="rgba(0,0,0,.34)"/>
+          <path d="M355,255 L365,255 L366,240 L354,240 Z" fill="#fbbf24" opacity=".92"/>
+          <circle cx="360" cy="235" r="4.6" fill="#e7ecff"/>
+        </g>
+        <g>
+          <ellipse cx="260" cy="258" rx="7" ry="3.4" fill="rgba(0,0,0,.34)"/>
+          <path d="M255,255 L265,255 L266,240 L254,240 Z" fill="#f472b6" opacity=".92"/>
+          <circle cx="260" cy="235" r="4.6" fill="#e7ecff"/>
+        </g>
+        <g>
+          <ellipse cx="150" cy="252" rx="6.4" ry="3.1" fill="rgba(0,0,0,.30)"/>
+          <path d="M145,249 L155,249 L156,235 L144,235 Z" fill="#818cf8" opacity=".85"/>
+          <circle cx="150" cy="230" r="4.2" fill="#e7ecff"/>
+        </g>
+
+        <!-- 四角装饰括号：复古未来的仪表感 -->
+        <g stroke="rgba(34,211,238,.42)" stroke-width="1.4" fill="none">
+          <path d="M92,232 92,222 102,222"/><path d="M528,222 538,222 538,232"/>
+          <path d="M92,268 92,278 102,278"/><path d="M528,278 538,278 538,268"/>
+        </g>
+      </svg>
+      <p class="art-cap">等距办公室 · 4 工位 + 会议室 + 服务器机柜</p>
+    </div>
   </div>
 
-  <div class="local">
-    <a class="addr" href="http://127.0.0.1:5173" target="_blank" rel="noopener">
-      <span class="k">前端</span><span class="v">http://127.0.0.1:5173</span>
-    </a>
-    <a class="addr" href="http://127.0.0.1:8787" target="_blank" rel="noopener">
-      <span class="k">后端</span><span class="v">http://127.0.0.1:8787</span>
-    </a>
-    <a class="addr" href="http://127.0.0.1:5173/auth.html" target="_blank" rel="noopener">
-      <span class="k">登录</span><span class="v">/auth.html</span>
-    </a>
+  <!-- ===================== 指标 ===================== -->
+  <div class="metrics reveal">
+    <div class="metric" style="--mc:var(--dept-design)"><b>45<small>+</small></b><span>API 端点</span><i></i></div>
+    <div class="metric" style="--mc:var(--dept-programming)"><b>12</b><span>SQLite 数据表</span><i></i></div>
+    <div class="metric" style="--mc:var(--dept-art)"><b>4</b><span>流水线阶段</span><i></i></div>
+    <div class="metric" style="--mc:var(--dept-narrative)"><b>3</b><span>模型路由档位</span><i></i></div>
+    <div class="metric" style="--mc:var(--dept-leadership)"><b>~40</b><span>在册 Agent 角色</span><i></i></div>
+    <div class="metric" style="--mc:var(--dept-qa)"><b>7<small> · 10</small></b><span>部门 · 公共设施</span><i></i></div>
   </div>
 
-  <div class="metrics">
-    <div class="metric"><b>45<span style="font-size:15px;color:var(--dim)">+</span></b><span>API 端点</span></div>
-    <div class="metric"><b>12</b><span>SQLite 数据表</span></div>
-    <div class="metric"><b>4</b><span>流水线阶段</span></div>
-    <div class="metric"><b>3</b><span>模型路由档位</span></div>
-    <div class="metric"><b>~40</b><span>在册 Agent 角色</span></div>
-    <div class="metric"><b>7</b><span>部门 / 9 公共设施</span></div>
-  </div>
-</div>
+  <!-- ===================== 01 办公室 ===================== -->
+  <section id="office">
+    <div class="tagrow"><span class="num">01</span><h2>这间办公室里有什么</h2></div>
+    <p class="sub">
+      7 个部门各有主题色与工位区域，Agent 会在工位、会议室与公共设施之间真实移动。
+      部门色直接取自前端 <code>deptColorsShort</code> 映射，不是配图时现编的。
+    </p>
 
-<div class="wrap">
+    <div class="depts reveal">
+      <div class="dept" style="--dc:var(--dept-leadership)"><b>领导 / 制作</b><span>leadership</span></div>
+      <div class="dept" style="--dc:var(--dept-design)"><b>策划 / 设计</b><span>design</span></div>
+      <div class="dept" style="--dc:var(--dept-programming)"><b>程序 / 工程</b><span>programming</span></div>
+      <div class="dept" style="--dc:var(--dept-art)"><b>美术 / 音频</b><span>art_audio</span></div>
+      <div class="dept" style="--dc:var(--dept-narrative)"><b>叙事</b><span>narrative</span></div>
+      <div class="dept" style="--dc:var(--dept-qa)"><b>QA / 发布</b><span>qa_release</span></div>
+      <div class="dept" style="--dc:var(--dept-other)"><b>综合</b><span>other</span></div>
+    </div>
 
+    <p class="sub" style="margin-bottom:var(--sp-3)">
+      办公室里还有 10 处公共设施，Agent 会自己去——这也是这间办公室最有性格的部分：
+    </p>
+    <div class="facilities reveal">
+      <span class="fac">会议室</span><span class="fac">咖啡室</span><span class="fac">茶室</span>
+      <span class="fac">卫生间</span><span class="fac">游戏机室</span><span class="fac">健身室</span>
+      <span class="fac">桌球室</span><span class="fac">图书室</span><span class="fac">COS 室</span>
+      <span class="fac">女装大佬室</span>
+    </div>
+  </section>
+
+  <!-- ===================== 02 能力 ===================== -->
   <section id="capability">
-    <div class="tagrow"><span class="num">01</span><h2>工作室里有什么</h2></div>
-    <p class="sub">界面上的每个抽屉面板对应一套已接入后端的真实能力，不是占位。以下按你在左侧菜单栏能看到的结构排列。</p>
+    <div class="tagrow"><span class="num">02</span><h2>工作室能力</h2></div>
+    <p class="sub">界面上每个抽屉面板对应一套已接入后端的真实能力，不是占位。以下按左侧菜单栏结构排列。</p>
 
     <div class="grid">
-      <div class="card">
-        <h3><i class="dot" style="background:var(--indigo)"></i>招聘中心</h3>
+      <div class="card reveal" style="--cc:var(--dept-leadership)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.5-5.4 5.5-5.4s5.5 2.2 5.5 5.4"/>
+            <path d="M17.5 7.5v5M15 10h5"/>
+          </svg>招聘中心
+        </h3>
         <p>市场 / 派单 / 体检三页。「初期模式」每类只留 1 人压低负载，也可一键全员在岗；体检会跑粗测与阶梯扫描，输出设备画像与可执行建议。</p>
         <div class="meta">/api/hire · /api/bench · /api/advice</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--cyan)"></i>会议室</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-design)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <ellipse cx="12" cy="12" rx="7.5" ry="4"/><circle cx="12" cy="6.6" r="1.7"/>
+            <circle cx="5.6" cy="15" r="1.7"/><circle cx="18.4" cy="15" r="1.7"/>
+          </svg>会议室
+        </h3>
         <p>立项 / 章程 / 变更三段。走会议模型生成章程草稿、里程碑与验收点；模型不可用时有规则兜底，偏离已归档章程会自动提醒。</p>
         <div class="meta">/api/meeting/* · /api/charter/*</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--green)"></i>沙盘看板</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-programming)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 20V11M9.5 20V5M15 20v-6M20.5 20V8"/>
+          </svg>沙盘看板
+        </h3>
         <p>绩效排行 / 任务流水线 / 工作流 / 编排 / Sprint 五个视图。资源仪表盘同时盯预算、能量与士气三条线。</p>
         <div class="meta">scoreboard · pipeline · workflow · orchestrator · sprint</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--pink)"></i>拖拽编排器</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-art)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <rect x="3" y="4" width="6" height="4.6" rx="1.2"/><rect x="15" y="4" width="6" height="4.6" rx="1.2"/>
+            <rect x="9" y="15.4" width="6" height="4.6" rx="1.2"/>
+            <path d="M6 8.6v3.2h12V8.6M12 11.8v3.6"/>
+          </svg>拖拽编排器
+        </h3>
         <p>Agent 节点与工具节点（起点 / 条件分支 / 审批 / 终点）拖到画布上连线，保存即成为可执行流程。</p>
         <div class="meta">SVG canvas · 节点属性面板</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--amber)"></i>三总监策略</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-narrative)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="17" r="2.4"/><circle cx="19" cy="17" r="2.4"/>
+            <path d="M10.4 7.1 6.6 14.9M13.6 7.1l3.8 7.8M7.4 17h9.2"/>
+          </svg>三总监策略
+        </h3>
         <p>制作人管拆单派单，技术总监管降级外包，创意总监管验收门禁。默认规则模式可玩可控，每人均可单独切到模型增强。</p>
         <div class="meta">/api/policy</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--indigo)"></i>任务队列</h3>
-        <p>优先级排序与并发槽位控制，HTML 产物自动校验失败重试。连锁派单按「策划→程序→美术→QA」自动入队。</p>
+
+      <div class="card reveal" style="--cc:var(--dept-qa)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 6.5h16M4 12h16M4 17.5h10"/><path d="M15.5 15.4l3.2 2.6-3.2 2.6"/>
+          </svg>任务队列
+        </h3>
+        <p>优先级排序与并发槽位控制，HTML 产物自动校验失败重试。连锁派单按「策划 → 程序 → 美术 → QA」自动入队。</p>
         <div class="meta">/api/queue · /api/queue/enqueue</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--cyan)"></i>财务与计费</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-other)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="8"/><path d="M8.6 13.6l2.2-3 2 1.8 2.6-3.6"/>
+          </svg>财务与计费
+        </h3>
         <p>按 token 估算今日请求数、失败数、成本与提供方分布，含失败原因归类。成本口径目前为估算，待接上游 usage 后收窄。</p>
         <div class="meta">/api/finance/summary · /api/finance/reset</div>
       </div>
-      <div class="card">
-        <h3><i class="dot" style="background:var(--green)"></i>资产管线</h3>
+
+      <div class="card reveal" style="--cc:var(--dept-design)">
+        <h3>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <rect x="3" y="5" width="7.5" height="6" rx="1.2"/><rect x="13.5" y="13" width="7.5" height="6" rx="1.2"/>
+            <path d="M10.5 8h4.5a1.5 1.5 0 0 1 1.5 1.5V13"/>
+          </svg>资产管线
+        </h3>
         <p>生图、打包 spritesheet、视频转码三条独立通路，产物写入显示器预览区；把 AI 写出的 HTML 粘进预览框即可留档并回看历史版本。</p>
         <div class="meta">asset-pipeline.ts · /api/preview/*</div>
       </div>
     </div>
   </section>
 
+  <!-- ===================== 03 流水线 ===================== -->
   <section id="pipeline">
-    <div class="tagrow"><span class="num">02</span><h2>四阶段流水线</h2></div>
+    <div class="tagrow"><span class="num">03</span><h2>四阶段流水线</h2></div>
     <p class="sub">任务从立项落到四处工位，任一环节积压会被判定为瓶颈并高亮；delay 与排队情况在流水中实时写出。</p>
 
+    <!-- 流水线走向图：四站串联，箭头流动 -->
+    <svg class="pipe-flow reveal" viewBox="0 0 860 96" role="img" aria-label="流水线四阶段走向图：策划设计到程序工程到美术音频到 QA 发布">
+      <defs>
+        <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 1 L9 5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+      </defs>
+      <path d="M96 48 H232" stroke="#22d3ee" stroke-width="1.7" stroke-dasharray="5 7" class="flow-line" marker-end="url(#arw)" opacity=".8"/>
+      <path d="M312 48 H448" stroke="#22d3ee" stroke-width="1.7" stroke-dasharray="5 7" class="flow-line" marker-end="url(#arw)" opacity=".8"/>
+      <path d="M528 48 H664" stroke="#22d3ee" stroke-width="1.7" stroke-dasharray="5 7" class="flow-line" marker-end="url(#arw)" opacity=".8"/>
+      <path d="M744 48 H812" stroke="#22d3ee" stroke-width="1.7" stroke-dasharray="5 7" class="flow-line" marker-end="url(#arw)" opacity=".8"/>
+
+      <g>
+        <polygon points="24,26 72,48 24,70" fill="rgba(34,211,238,.16)" stroke="rgba(34,211,238,.6)" stroke-width="1.2"/>
+        <circle cx="24" cy="48" r="18" fill="none" stroke="rgba(34,211,238,.45)" stroke-width="1"/>
+      </g>
+      <g>
+        <polygon points="240,26 288,48 240,70" fill="rgba(52,211,153,.14)" stroke="rgba(52,211,153,.55)" stroke-width="1.2"/>
+        <circle cx="264" cy="48" r="18" fill="none" stroke="rgba(52,211,153,.4)" stroke-width="1"/>
+      </g>
+      <g>
+        <polygon points="456,26 504,48 456,70" fill="rgba(244,114,182,.16)" stroke="rgba(244,114,182,.6)" stroke-width="1.2"/>
+        <circle cx="480" cy="48" r="18" fill="none" stroke="rgba(244,114,182,.45)" stroke-width="1"/>
+      </g>
+      <g>
+        <polygon points="672,26 720,48 672,70" fill="rgba(248,113,113,.14)" stroke="rgba(248,113,113,.55)" stroke-width="1.2"/>
+        <circle cx="696" cy="48" r="18" fill="none" stroke="rgba(248,113,113,.4)" stroke-width="1"/>
+      </g>
+      <g>
+        <polygon points="816,30 852,48 816,66" fill="rgba(231,236,255,.10)" stroke="rgba(231,236,255,.4)" stroke-width="1.2"/>
+      </g>
+
+      <g font-family="IBM Plex Mono, monospace" font-size="11" fill="#93a0c4">
+        <text x="24" y="86" text-anchor="middle">策划 · 设计</text>
+        <text x="264" y="86" text-anchor="middle">程序 · 工程</text>
+        <text x="480" y="86" text-anchor="middle">美术 · 音频</text>
+        <text x="696" y="86" text-anchor="middle">QA · 发布</text>
+        <text x="834" y="86" text-anchor="middle">交付</text>
+      </g>
+    </svg>
+
     <div class="pipe">
-      <div class="stage">
-        <div class="no">STAGE 01</div><div class="nm">策划 / 设计</div>
+      <div class="stage" style="--sc:var(--dept-design)">
+        <div class="no">STAGE 01</div><div class="nm"><i></i>策划 / 设计</div>
         <div class="tip">需求拆解、立项章程、里程碑与验收点</div>
       </div>
-      <div class="stage">
-        <div class="no">STAGE 02</div><div class="nm">程序 / 工程</div>
+      <div class="stage" style="--sc:var(--dept-programming)">
+        <div class="no">STAGE 02</div><div class="nm"><i></i>程序 / 工程</div>
         <div class="tip">HTML 首包产出，超时则降级或外包</div>
       </div>
-      <div class="stage is-bottleneck">
-        <div class="no">STAGE 03</div><div class="nm">美术 / 音频</div>
+      <div class="stage is-bottleneck" style="--sc:var(--dept-art)">
+        <div class="no">STAGE 03</div><div class="nm"><i></i>美术 / 音频</div>
         <div class="tip">贴图、spritesheet 打包与转码，常见积压点</div>
       </div>
-      <div class="stage">
-        <div class="no">STAGE 04</div><div class="nm">QA / 发布</div>
+      <div class="stage" style="--sc:var(--dept-qa)">
+        <div class="no">STAGE 04</div><div class="nm"><i></i>QA / 发布</div>
         <div class="tip">自动验证、多端适配检查与放行</div>
       </div>
     </div>
 
-    <p class="note">
-      Sprint 以 7 天为一周期推进：资源分配 → 执行 → 验收 → 复盘。可以手动「推进 1 天」，
-      用来观察士气、预算与积压如何随时间变化。
-    </p>
+    <p class="sub" style="margin-bottom:var(--sp-3)">Sprint 以 7 天为一周期推进，可以手动「推进 1 天」观察士气、预算与积压如何随时间变化。</p>
+    <div class="sprint reveal">
+      <div><span class="d">DAY 1</span><span class="p">资源分配</span></div>
+      <div><span class="d">DAY 2</span><span class="p">执行</span></div>
+      <div><span class="d">DAY 3</span><span class="p">执行</span></div>
+      <div class="on"><span class="d">DAY 4</span><span class="p">执行</span></div>
+      <div><span class="d">DAY 5</span><span class="p">验收</span></div>
+      <div><span class="d">DAY 6</span><span class="p">返修</span></div>
+      <div><span class="d">DAY 7</span><span class="p">复盘</span></div>
+    </div>
+    <p class="note">美术 / 音频是最常见的积压点——贴图与转码串行排队时，后段 QA 会空转。</p>
   </section>
 
+  <!-- ===================== 04 模型路由 ===================== -->
   <section id="routing">
-    <div class="tagrow"><span class="num">03</span><h2>模型路由</h2></div>
-    <p class="sub">
-      三档路由决定「执行」和「会议」分别花谁的钱。三个总监派单时走会议侧，
-      招聘卡片上的个体绑定可以覆盖全局档位。
-    </p>
+    <div class="tagrow"><span class="num">04</span><h2>模型路由</h2></div>
+    <p class="sub">三档路由决定「执行」和「会议」分别花谁的钱。三个总监派单时走会议侧，招聘卡片上的个体绑定可以覆盖全局档位。</p>
 
     <div class="tiers">
-      <div class="tier">
-        <div class="t">省钱</div>
+      <div class="tier reveal">
+        <div class="t"><i></i>省钱</div>
         <ul><li>执行：本地</li><li>会议：本地</li><li>零 API 成本，速度取决于本机</li></ul>
       </div>
-      <div class="tier" style="border-color:rgba(6,182,212,.42)">
-        <div class="t">均衡 · 默认</div>
+      <div class="tier is-default reveal">
+        <div class="t"><i></i>均衡 · 默认</div>
         <ul><li>执行：本地</li><li>会议：云端</li><li>干活用本机，决策用云端</li></ul>
       </div>
-      <div class="tier">
-        <div class="t">高质量</div>
+      <div class="tier reveal">
+        <div class="t"><i></i>高质量</div>
         <ul><li>执行：云端</li><li>会议：云端</li><li>全链路云端，成本最高</li></ul>
       </div>
     </div>
 
-    <p class="note" style="margin-top:20px">
+    <p class="note" style="margin-top:var(--sp-4)">
       支持 DeepSeek、Moonshot、MiniMax 预设与本地 Ollama；也能直接填任意 OpenAI 兼容的 BaseURL。
     </p>
   </section>
 
+  <!-- ===================== 05 架构 ===================== -->
+  <section id="arch">
+    <div class="tagrow"><span class="num">05</span><h2>数据怎么流</h2></div>
+    <p class="sub">浏览器里的等距办公室是只读视图，真实状态在服务端；两侧靠一条 WebSocket 事件流同步，断线自动重连。</p>
+
+    <svg class="pipe-flow reveal" viewBox="0 0 860 300" role="img" aria-label="架构拓扑图：Phaser 前端经 WebSocket 与 Node 服务端通信，服务端读写 SQLite 并调用本地或云端模型端点">
+      <!-- 前端 -->
+      <g>
+        <rect x="24" y="34" width="172" height="88" rx="10" fill="#0a0e1a" stroke="rgba(34,211,238,.42)" stroke-width="1.2"/>
+        <text x="110" y="62" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="14" font-weight="600" fill="#e7ecff">Phaser 3.90</text>
+        <text x="110" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#93a0c4">等距办公室 · 56×36</text>
+        <text x="110" y="102" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b789d">Vite 6 · TypeScript 5.8</text>
+      </g>
+      <!-- 事件通道 -->
+      <g>
+        <rect x="248" y="54" width="152" height="48" rx="8" fill="rgba(34,211,238,.09)" stroke="rgba(34,211,238,.5)" stroke-width="1.2"/>
+        <text x="324" y="74" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#22d3ee">WebSocket /ws</text>
+        <text x="324" y="92" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#93a0c4">JSONL 事件流</text>
+      </g>
+      <path d="M196 78 H246" stroke="#22d3ee" stroke-width="1.7" class="flow-line" marker-end="url(#arwc)" opacity=".85"/>
+      <path d="M246 90 H196" stroke="#22d3ee" stroke-width="1.7" class="flow-line" marker-end="url(#arwc)" opacity=".5"/>
+      <!-- 服务端 -->
+      <g>
+        <rect x="452" y="34" width="180" height="88" rx="10" fill="#0a0e1a" stroke="rgba(129,140,248,.45)" stroke-width="1.2"/>
+        <text x="542" y="62" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="14" font-weight="600" fill="#e7ecff">Node HTTP 服务</text>
+        <text x="542" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#93a0c4">45+ API · :8787</text>
+        <text x="542" y="102" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b789d">tsx · better-sqlite3</text>
+      </g>
+      <path d="M400 78 H450" stroke="#818cf8" stroke-width="1.7" class="flow-line" marker-end="url(#arwb)" opacity=".85"/>
+      <path d="M450 90 H400" stroke="#818cf8" stroke-width="1.7" class="flow-line" marker-end="url(#arwb)" opacity=".5"/>
+      <!-- 右：模型端点 -->
+      <g>
+        <rect x="684" y="34" width="152" height="88" rx="10" fill="#0a0e1a" stroke="rgba(251,191,36,.42)" stroke-width="1.2"/>
+        <text x="760" y="60" text-anchor="middle" font-family="Chakra Petch, sans-serif" font-size="13" font-weight="600" fill="#e7ecff">模型端点</text>
+        <text x="760" y="80" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#93a0c4">Ollama / vLLM</text>
+        <text x="760" y="98" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6b789d">DeepSeek · Moonshot</text>
+        <text x="760" y="114" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6b789d">OpenAI 兼容协议</text>
+      </g>
+      <path d="M632 78 H682" stroke="#fbbf24" stroke-width="1.7" class="flow-line" marker-end="url(#arwa)" opacity=".8"/>
+      <!-- 下：SQLite -->
+      <g>
+        <rect x="452" y="176" width="180" height="80" rx="10" fill="#0a0e1a" stroke="rgba(52,211,153,.42)" stroke-width="1.2"/>
+        <ellipse cx="542" cy="196" rx="52" ry="12" fill="none" stroke="rgba(52,211,153,.55)" stroke-width="1.2"/>
+        <path d="M490 196v34c0 6.6 23.4 12 52 12s52-5.4 52-12v-34" fill="none" stroke="rgba(52,211,153,.55)" stroke-width="1.2"/>
+        <text x="542" y="246" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#93a0c4">SQLite · 12 张表</text>
+      </g>
+      <path d="M542 122 V174" stroke="#34d399" stroke-width="1.7" class="flow-line" marker-end="url(#arwg)" opacity=".8"/>
+      <!-- 标注 -->
+      <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#6b789d">
+        <text x="110" y="140" text-anchor="middle">只读视图 · 渲染状态</text>
+        <text x="542" y="140" text-anchor="middle">唯一状态源</text>
+        <text x="760" y="140" text-anchor="middle">可本地可云端</text>
+        <text x="542" y="278" text-anchor="middle">12 张表：projects / jobs / providers / hired_agents / policy / charters …</text>
+      </g>
+      <defs>
+        <marker id="arwc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 1 L9 5 L0 9 z" fill="#22d3ee"/>
+        </marker>
+        <marker id="arwb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 1 L9 5 L0 9 z" fill="#818cf8"/>
+        </marker>
+        <marker id="arwa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 1 L9 5 L0 9 z" fill="#fbbf24"/>
+        </marker>
+        <marker id="arwg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 1 L9 5 L0 9 z" fill="#34d399"/>
+        </marker>
+      </defs>
+    </svg>
+  </section>
+
+  <!-- ===================== 06 运行 ===================== -->
   <section id="start">
-    <div class="tagrow"><span class="num">04</span><h2>跑起来</h2></div>
+    <div class="tagrow"><span class="num">06</span><h2>跑起来</h2></div>
     <p class="sub">需要 Node.js 18 及以上。根 workspace 会同时拉起前后端两个进程。</p>
 
-    <div class="terminal">
+    <div class="terminal reveal">
       <div class="bar">
-        <i style="background:#ef4444"></i><i style="background:#f59e0b"></i><i style="background:#10b981"></i>
+        <i style="background:#ef4444"></i><i style="background:#f59e0b"></i><i style="background:#34d399"></i>
         <span class="txt">bash — DreamForgeStudio</span>
       </div>
 <pre><code><span class="c-dim"># 安装依赖（npm workspaces 会一并处理 apps/* 与 packages/*）</span>
@@ -326,55 +904,87 @@
 npm run dev:server
 npm run dev:web
 
-<span class="c-dim"># 端到端冒烟：真实改名 + 队列 + 回退链路自检</span>
+<span class="c-dim"># 端到端冒烟：任务队列 + 派单 + 回退链路自检</span>
 <span class="c-am">npm run check:studio-e2e</span></code></pre>
     </div>
 
-    <p class="note" style="margin-top:20px">
+    <p class="note" style="margin-top:var(--sp-4)">
       首次打开建议先进连接设置填 BaseURL 与模型名，点「测试」确认通；本地报显存不足时换成更小模型或让 Ollama 走 CPU。
     </p>
   </section>
 
+  <!-- ===================== 07 技术栈 ===================== -->
   <section id="stack">
-    <div class="tagrow"><span class="num">05</span><h2>技术栈</h2></div>
+    <div class="tagrow"><span class="num">07</span><h2>技术栈</h2></div>
     <div class="cols">
       <dl class="kv">
-        <dt>前端</dt><dd>TypeScript 5.8 · Vite 6.2 · Phaser 3.90</dd>
+        <dt>前端</dt><dd>TypeScript 5.8 · Vite 6 · Phaser 3.90</dd>
         <dt>后端</dt><dd>Node.js HTTP + WebSocket · tsx</dd>
         <dt>持久化</dt><dd>better-sqlite3 · 12 张表 · JSON 自动迁移备份</dd>
         <dt>模型接入</dt><dd>OpenAI 兼容 HTTP API 代理</dd>
         <dt>认证</dt><dd>注册 / 登录 · SHA256 口令 · Bearer Token</dd>
         <dt>实时</dt><dd>WebSocket 事件流 · 断线自动重连</dd>
+        <dt>媒体</dt><dd>sharp（图像处理）· spritesheet 打包 · 转码</dd>
       </dl>
       <dl class="kv">
         <dt>角色来源</dt><dd>上游 Claude Code Game Studios 快照，已裁剪通用引擎 Agent 并增补平台专家</dd>
         <dt>规范驱动</dt><dd>openspec（changes / specs），变更先提案后落地</dd>
+        <dt>共享类型</dt><dd>packages/shared · studio-events（前后端同一份事件定义）</dd>
+        <dt>包管理</dt><dd>npm workspaces · apps/* 与 packages/*</dd>
         <dt>许可</dt><dd>见仓库根目录 LICENSE</dd>
       </dl>
     </div>
   </section>
 
+  <!-- ===================== 08 仓库 ===================== -->
   <section id="repo">
-    <div class="tagrow"><span class="num">06</span><h2>仓库结构</h2></div>
+    <div class="tagrow"><span class="num">08</span><h2>仓库结构</h2></div>
     <p class="sub">npm workspaces 单仓多包，共享类型放在 packages/shared。</p>
-    <div class="tree">
+    <div class="tree reveal">
       <div><a href="README.md">README.md</a> <span class="d">— 项目概览</span></div>
       <div><a href="docs/STUDIO.md">docs/STUDIO.md</a> <span class="d">— 多端交付与本地模型约定</span></div>
       <div><a href="docs/COLLABORATIVE-DESIGN-PRINCIPLE.md">docs/COLLABORATIVE-DESIGN-PRINCIPLE.md</a> <span class="d">— 人机协作协议</span></div>
       <div><a href="openspec/">openspec/</a> <span class="d">— 变更提案与规格（含存档）</span></div>
-      <div><a href="apps/studio-server/">apps/studio-server/</a> <span class="d">— Node + WebSocket + SQLite</span></div>
-      <div><a href="apps/studio-web/">apps/studio-web/</a> <span class="d">— Vite + Phaser 等距办公室</span></div>
+      <div><a href="apps/studio-server/">apps/studio-server/</a> <span class="d">— Node + WebSocket + SQLite（index.ts 约 3.9k 行）</span></div>
+      <div><a href="apps/studio-web/">apps/studio-web/</a> <span class="d">— Vite + Phaser 等距办公室（main.ts 约 5.8k 行）</span></div>
       <div><a href="packages/shared/">packages/shared/</a> <span class="d">— 前后端共用事件类型</span></div>
       <div><a href="vendor/claude-game-studios/">vendor/claude-game-studios/</a> <span class="d">— 上游角色定义快照</span></div>
       <div><a href="scripts/studio-e2e-smoke.mjs">scripts/studio-e2e-smoke.mjs</a> <span class="d">— 端到端冒烟</span></div>
     </div>
   </section>
 
-  <footer>
-    <p>DreamForgeStudio · 造梦游戏工坊 — aiGameGongfang Studio</p>
-    <p>本页依据仓库源码与界面实际结构整理，与 README 描述不一致处以代码实现为准。</p>
-  </footer>
+</main>
 
-</div>
+<footer>
+  <div class="wrap">
+    <p>DreamForgeStudio · 造梦游戏工坊 — aiGameGongfang Studio</p>
+    <p>本页依据仓库源码与实际界面结构整理；与 README 描述不一致处以代码实现为准。</p>
+  </div>
+</footer>
+
+<script>
+/* 滚动揭示：只动 opacity 与 transform，尊重 reduced-motion */
+(function () {
+  var items = document.querySelectorAll('.reveal');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    items.forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var siblings = Array.prototype.slice.call(e.target.parentElement.children).filter(function (n) {
+        return n.classList.contains('reveal');
+      });
+      // 同一容器内按序错峰，组间隔 70ms
+      e.target.style.transitionDelay = Math.min(siblings.indexOf(e.target), 7) * 70 + 'ms';
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  items.forEach(function (el) { io.observe(el); });
+})();
+</script>
 </body>
 </html>
