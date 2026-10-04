@@ -1,0 +1,122 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>aiGameGongfang Studio — 登录</title>
+<style>
+:root{--bg:#0a0e1a;--text:#e7ecff;--muted:rgba(231,236,255,0.7);--cyan:#06b6d4;--indigo:#6366f1;--green:#10b981;--border:rgba(99,102,241,0.15)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(2px 2px at 15% 30%,rgba(99,102,241,.4),transparent),radial-gradient(1px 1px at 45% 70%,rgba(6,182,212,.3),transparent),radial-gradient(2px 2px at 75% 20%,rgba(16,185,129,.3),transparent),linear-gradient(160deg,#0a0e1a 0%,#0d1525 50%,#0b1020 100%)}
+.wrap{position:relative;z-index:10;width:420px;max-width:94vw}
+.logo{text-align:center;font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--indigo),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;margin-bottom:6px}
+.sub{font-size:12px;color:var(--muted);margin-bottom:24px;text-align:center}
+.card{background:rgba(17,24,39,.7);backdrop-filter:blur(16px);border:1px solid rgba(99,102,241,.3);border-radius:24px;padding:32px 28px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{flex:1;text-align:center;padding:8px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.msg{font-size:11px;padding:6px 0;min-height:20px;transition:all .2s}
+.msg.e{color:#ef4444}.msg.o{color:var(--green)}
+.inp{width:100%;padding:12px 14px;margin-bottom:12px;background:rgba(0,0,0,.4);border:1px solid rgba(148,163,184,.2);border-radius:12px;color:var(--text);font-size:14px;outline:none;transition:all .25s}
+.inp:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 12px rgba(99,102,241,.2)}
+.inp::placeholder{color:rgba(231,236,255,.25)}
+.btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--indigo),var(--cyan));border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn:hover{box-shadow:0 0 20px rgba(99,102,241,.4);transform:translateY(-1px)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:16px;opacity:.5}
+.dot{width:8px;height:8px;border-radius:50%;animation:p 2s ease-in-out infinite}
+.dot:nth-child(1){background:var(--indigo);animation-delay:0s}
+.dot:nth-child(2){background:var(--cyan);animation-delay:.3s}
+.dot:nth-child(3){background:var(--green);animation-delay:.6s}
+.dot:nth-child(4){background:#ec4899;animation-delay:.9s}
+.dot:nth-child(5){background:#f59e0b;animation-delay:1.2s}
+@keyframes p{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.8);opacity:1}}
+</style></head>
+<body>
+<div class="bg"></div>
+<canvas id="pc" style="position:fixed;inset:0;z-index:1;pointer-events:none"></canvas>
+<div class="wrap">
+  <div class="logo">🏭 造梦游戏工坊</div>
+  <div class="sub">AI Agent 游戏开发 · 企业沙盘模拟 · 多智能体协作</div>
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" data-mode="login">登 录</div>
+      <div class="tab" data-mode="register">注 册</div>
+    </div>
+    <div class="msg" id="msg"></div>
+    <input class="inp" id="username" placeholder="用户名" autocomplete="username">
+    <input class="inp" id="password" type="password" placeholder="密码" autocomplete="current-password">
+    <input class="inp" id="studioName" placeholder="工作室名称（可选）" style="display:none">
+    <button class="btn" id="submitBtn">登 录</button>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+<script>
+// 神经网络粒子背景（不阻塞点击）
+(function(){var c=document.getElementById('pc'),x=c.getContext('2d'),W,H,ps=[],M={x:-999,y:-999},N=50,D=120,col=['#6366f1','#06b6d4','#10b981','#ec4899','#f59e0b'];
+function rs(){W=c.width=innerWidth;H=c.height=innerHeight}
+addEventListener('resize',rs);addEventListener('mousemove',function(e){M.x=e.clientX;M.y=e.clientY});rs();
+for(var i=0;i<N;i++)ps.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4-.2,r:1+Math.random()*2.5,cc:col[i%col.length],p:Math.random()*6.28,ps:.01+Math.random()*.03});
+(function draw(){
+x.clearRect(0,0,W,H);
+for(var i=0;i<N;i++){for(var j=i+1;j<N;j++){var a=ps[i],b=ps[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+if(d<D){x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.strokeStyle=a.cc+'20';x.lineWidth=.5;x.stroke()}}
+var mx=a.x-M.x,my=a.y-M.y,md=Math.sqrt(mx*mx+my*my);
+if(md<150){x.beginPath();x.moveTo(a.x,a.y);x.lineTo(M.x,M.y);x.strokeStyle=a.cc+'40';x.lineWidth=.6;x.stroke()}}
+for(var k=0;k<N;k++){var p=ps[k];p.p+=p.ps;var g=.5+Math.sin(p.p)*.3;
+x.beginPath();x.arc(p.x,p.y,p.r*2.5,0,6.28);x.fillStyle=p.cc+'18';x.fill();
+x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fillStyle=p.cc+((g*0.8*255)|0).toString(16).padStart(2,'0');x.fill();
+p.x+=p.vx;p.y+=p.vy;if(p.x<-20)p.x=W+20;if(p.x>W+20)p.x=-20;if(p.y<-20)p.y=H+20;if(p.y>H+20)p.y=-20}
+requestAnimationFrame(draw)})()})();
+
+const API="http://127.0.0.1:8787";
+let mode="login";
+
+// Tab switch
+document.querySelectorAll(".tab").forEach(t=>{t.onclick=()=>{
+  mode=t.dataset.mode;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===t));
+  document.getElementById("studioName").style.display=mode==="register"?"":"none";
+  document.getElementById("submitBtn").textContent=mode==="register"?"注 册":"登 录";
+  document.getElementById("msg").textContent="";document.getElementById("msg").className="msg";
+}});
+
+// Submit
+document.getElementById("submitBtn").addEventListener("click",async function(){
+  const btn=this,msg=document.getElementById("msg");
+  const u=document.getElementById("username").value.trim();
+  const p=document.getElementById("password").value.trim();
+  const sn=document.getElementById("studioName").value.trim();
+  msg.textContent="";msg.className="msg";
+  if(!u||!p){msg.textContent="请填写用户名和密码";msg.className="msg e";return}
+  btn.disabled=true;btn.textContent="处理中...";
+  try{
+    const url=mode==="register"?`${API}/api/auth/register`:`${API}/api/auth/login`;
+    const body=mode==="register"?{username:u,password:p,studioName:sn||"我的工作室"}:{username:u,password:p};
+    const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.ok){
+      if(mode==="register"){
+        msg.textContent="注册成功！请登录";msg.className="msg o";
+        mode="login";
+        document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.mode==="login"));
+        document.getElementById("studioName").style.display="none";
+        document.getElementById("submitBtn").textContent="登 录";
+      }else{
+        localStorage.setItem("studio_token",d.token);
+        localStorage.setItem("studio_name",d.studioName||"");
+        localStorage.setItem("studio_username",d.username||"");
+        window.location.href="/";
+      }
+    }else{
+      msg.textContent=d.error||"操作失败";msg.className="msg e";
+    }
+  }catch(e){
+    msg.textContent="无法连接服务器，请确认 studio-server 已启动";msg.className="msg e";
+  }
+  btn.disabled=false;btn.textContent=mode==="register"?"注 册":"登 录";
+});
+
+// Enter key
+document.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("submitBtn").click()});
+</script>
+</body></html>

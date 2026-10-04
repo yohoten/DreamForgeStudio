@@ -1,0 +1,625 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b1020'/%3E%3C/svg%3E" />
+    <title>aiGameGongfang Studio</title>
+  </head>
+  <body>
+    <div class="particle-container" id="particleContainer"></div>
+    <div id="hud">
+      <div class="hudStack">
+        <div class="row">
+          <button id="hudCollapseBtn" class="hudCollapseBtn" title="折叠面板">«</button>
+          <div class="title">Studio</div>
+          <div id="agentCount" class="pill">Agents: -</div>
+          <div id="wsStatus" class="pill">WS: -</div>
+          <div id="perfPill" class="pill">算力：-</div>
+          <button class="pill" id="hudHelpBtn" title="使用帮助">?</button>
+        </div>
+        <div id="inspector" class="panel">
+        <div class="hudTabs">
+          <button class="hudTab isActive" data-hud-tab="feed">动态</button>
+          <button class="hudTab" data-hud-tab="roster">名册</button>
+          <button class="hudTab" data-hud-tab="manage">经营</button>
+          <button class="hudTab" data-hud-tab="log">日志</button>
+        </div>
+        <div class="secretaryBanner" id="secretaryBanner" title="秘书提示">
+          <span class="secretaryTag">秘书</span><span id="secretaryBannerText">初始化…</span>
+        </div>
+        <div id="hudTab_feed" class="hudTabContent isActive">
+          <div id="feedCards" class="feedCards"></div>
+        </div>
+        <div id="hudTab_roster" class="hudTabContent">
+          <div id="agentRoster" class="agentRoster"></div>
+        </div>
+        <div id="hudTab_manage" class="hudTabContent">
+          <div class="managePanel">
+            <div class="panelTitle">资源仪表盘</div>
+            <div class="manageGrid">
+              <div class="manageMetric">
+                <span class="manageLabel">💰 预算</span>
+                <span class="manageVal" id="mgBudget">¥12,500</span>
+                <div class="manageBar"><div class="manageBarFill" id="mgBudgetBar" style="width:65%"></div></div>
+              </div>
+              <div class="manageMetric">
+                <span class="manageLabel">⚡ 能量</span>
+                <span class="manageVal" id="mgEnergy">58%</span>
+                <div class="manageBar"><div class="manageBarFill energy" id="mgEnergyBar" style="width:58%"></div></div>
+              </div>
+              <div class="manageMetric">
+                <span class="manageLabel">😊 士气</span>
+                <span class="manageVal" id="mgMorale">85%</span>
+                <div class="manageBar"><div class="manageBarFill morale" id="mgMoraleBar" style="width:85%"></div></div>
+              </div>
+            </div>
+            <div class="hr"></div>
+            <div class="panelTitle">风险预警</div>
+            <div id="mgRisks" class="manageRisks">
+              <div class="manageRiskCard warn">美术部门任务积压</div>
+            </div>
+            <div class="hr"></div>
+            <div class="panelTitle">时间控件</div>
+            <div class="row2">
+              <span class="muted" id="mgSprintInfo">Sprint 1 · Day 3/7</span>
+              <button id="mgAdvanceDay" class="menuBtn" style="font-size:10px;padding:2px 8px">推进1天</button>
+            </div>
+          </div>
+        </div>
+        <div id="hudTab_log" class="hudTabContent">
+          <div id="log" class="log"></div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div id="wsBanner" class="wsBanner hidden">连接已断开，正在自动重连…</div>
+    <div id="topBar">
+      <span class="topBarTitle">🏠 Studio</span>
+      <span class="topBarItem" id="tbProject">📁 默认项目</span>
+      <span class="topBarItem" id="tbUser" title="当前用户">👤 -</span>
+      <span class="topBarItem" id="tbActive" title="活跃任务">⚡0</span>
+      <span class="topBarItem" id="tbCost" title="今日成本">💰-</span>
+      <span class="topBarSpacer"></span>
+      <span class="topBarItem" id="tbOnline" title="连接状态">🟢</span>
+      <button id="btnPolicy" class="topBarBtn">策略</button>
+      <button id="btnSettings" class="topBarBtn">⚙</button>
+      <button id="btnLogout" class="topBarBtn" title="退出登录">🚪</button>
+    </div>
+    <div id="drawerMask" class="drawerMask hidden"></div>
+    <div id="drawer" class="drawer panel hidden">
+      <div class="drawerHead">
+        <div id="drawerTitle" class="panelTitle">管理</div>
+        <button id="drawerClose" class="iconBtn" title="关闭 (Esc)">×</button>
+      </div>
+      <div id="drawerBody" class="drawerBody">
+        <div id="drawer_dept" class="drawerSection">
+          <div class="panelTitle" id="deptTitle">部门产出</div>
+          <div class="row2">
+            <span class="tag" id="deptKpiOutput">产出:-</span>
+            <span class="tag" id="deptKpiBugs">问题:-</span>
+            <span class="tag" id="deptKpiBlock">卡点:-</span>
+            <div></div>
+          </div>
+          <div class="cardBody" id="deptSummary">-</div>
+          <div class="hr"></div>
+          <div class="row2">
+            <button id="deptApprove" class="btnPrimary">通过</button>
+            <button id="deptReject" class="btnWarn">驳回</button>
+            <button id="deptRedo">继续/重做</button>
+          </div>
+          <div class="muted" id="deptActionOut"></div>
+        </div>
+        <div id="drawer_monitor" class="drawerSection">
+          <div class="panelTitle">显示器（预览结果）</div>
+          <div class="row2">
+            <span class="tag" id="kpiTokens2">tokens:-</span>
+            <span class="tag" id="kpiReq2">请求:-</span>
+            <span class="tag" id="kpiSlots2">并发:-</span>
+            <div></div>
+          </div>
+          <div class="row2">
+            <div class="label">项目</div>
+            <select id="monitorProject"></select>
+            <button id="monitorNewProject">新建</button>
+            <button id="monitorDeleteProject" class="btnWarn" style="display:none" title="删除项目" onclick="window.__studioDeleteProject__?.(document.getElementById('monitorProject').value)">🗑 删项目</button>
+          </div>
+          <div class="row2">
+            <div class="label">预览链接</div>
+            <input id="monitorPreviewUrl" readonly placeholder="http://127.0.0.1:8787/preview?projectId=..." />
+            <button id="copyPreviewUrl">复制</button>
+            <button id="openPreviewUrl">打开</button>
+          </div>
+          <div class="monitorBody">
+            <iframe id="previewFrame" class="previewFrame" sandbox="allow-scripts allow-same-origin" src="http://127.0.0.1:8787/preview"></iframe>
+            <div class="monitorRight">
+              <div class="muted">最近失败（可诊断）</div>
+              <div id="studioFailuresOut" class="muted"></div>
+              <div id="studioFailuresList" class="list" style="max-height: 100px; overflow: auto"></div>
+              <div class="hr"></div>
+              <div class="muted">把 AI 程序写出来的 HTML 粘贴到这里，保存后会在左侧预览。</div>
+              <textarea id="previewHtml" class="previewText" placeholder="粘贴完整 HTML（含 <!doctype html>）"></textarea>
+              <div class="row2">
+                <button id="savePreview" class="btnPrimary">保存到显示器</button>
+                <button id="reloadPreview">刷新预览</button>
+                <div id="savePreviewOut" class="muted"></div>
+              </div>
+              <div class="hr"></div>
+              <div class="muted">历史版本（本项目）：点击可回看某次保存的预览。</div>
+              <div class="row2">
+                <button id="reloadPreviewHistory">刷新历史</button>
+                <div id="previewHistoryOut" class="muted"></div>
+              </div>
+              <div id="previewHistoryList" class="list" style="max-height: 160px; overflow: auto"></div>
+            </div>
+          </div>
+        </div>
+        <div id="drawer_settings" class="drawerSection">
+          <div class="panelTitle">连接设置（本地/互联网模型）</div>
+          <div class="muted">
+            BaseURL 需为 OpenAI 兼容的 <code>/v1</code>（例如本地 <code>http://127.0.0.1:11434/v1</code>）。若本地测试报显存/CUDA（如
+            <code>unable to allocate CUDA0 buffer</code>），请换更小模型、释放显存，或让 Ollama 走 CPU。
+            <span class="hr" style="display: block; height: 8px; border: 0"></span>
+            Kimi「Code」接口 <code>https://api.kimi.com/coding/v1</code> 仅对白名单 Coding Agent（Roo Code、Claude Code 等）开放，本工作室直连会出现 HTTP 403；互联网模型请改用 Moonshot 开放平台
+            <code>https://api.moonshot.cn/v1</code>、平台模型名（如 <code>moonshot-v1-8k</code>）及平台 API Key。下方预设会填该 BaseURL。
+          </div>
+          <div class="hr"></div>
+          <div class="panelTitle">本地模型</div>
+          <div class="row2">
+            <div class="label">BaseURL</div>
+            <input id="cfgLocalBaseUrl" placeholder="http://127.0.0.1:11434/v1" />
+          </div>
+          <div class="row2">
+            <div class="label">Model</div>
+            <select id="cfgLocalModel"></select>
+            <button id="testLocal">测试</button>
+          </div>
+          <div class="row2">
+            <button id="ollamaStatus">检测 Ollama</button>
+            <button id="ollamaStart">启动 Ollama</button>
+            <div id="ollamaOut" class="muted"></div>
+          </div>
+          <div id="testLocalOut" class="muted"></div>
+          <div class="hr"></div>
+          <div class="panelTitle">互联网 API</div>
+          <div class="row2">
+            <div class="label">预设</div>
+            <select id="cloudPreset">
+              <option value="custom">自定义</option>
+              <option value="deepseek_v4">DeepSeek V4 Pro（推荐，api.deepseek.com）</option>
+              <option value="deepseek_flash">DeepSeek Flash（极速，api.deepseek.com）</option>
+              <option value="deepseek_r1">DeepSeek R1 推理（api.deepseek.com）</option>
+              <option value="moonshot">Moonshot 开放平台（api.moonshot.cn）</option>
+              <option value="minimax">MiniMax（api.minimaxi.com）</option>
+              <option value="cursor">Cursor</option>
+              <option value="codebuddy">CodeBuddy</option>
+            </select>
+            <div></div>
+          </div>
+          <div class="row2">
+            <div class="label">BaseURL</div>
+            <input id="cfgCloudBaseUrl" placeholder="https://your-api.example.com/v1" />
+          </div>
+          <div class="row2">
+            <div class="label">Model</div>
+            <input id="cfgCloudModel" placeholder="gpt-oss" />
+            <button id="testCloud">测试</button>
+          </div>
+          <div class="muted" style="margin: -4px 0 8px">
+            若互联网 BaseURL 与本地 Ollama 相同：保存配置时会自动把「互联网 Model」同步为本地下拉框里的模型名（策略「均衡」时会议走互联网槽位，否则会用到错误的模型名）。
+          </div>
+          <div class="row2">
+            <div class="label">API Key</div>
+            <input id="cfgCloudApiKey" type="password" placeholder="sk-..." />
+            <div class="muted" id="cfgCloudKeyHint"></div>
+          </div>
+          <div class="row2">
+            <div class="label">计费(输出/1k)</div>
+            <input id="cfgCloudOut1k" type="number" step="0.001" value="0.03" />
+            <button id="saveProviderCfg">保存配置</button>
+          </div>
+          <div id="saveProviderCfgOut" class="muted"></div>
+          <div id="testCloudOut" class="muted"></div>
+        </div>
+        <div id="drawer_policy" class="drawerSection">
+          <div class="panelTitle">管理策略（三总监）</div>
+          <div class="muted">规则模式默认可玩可控；模型增强为后续迭代入口（目前仅保留开关）。</div>
+          <div class="hr"></div>
+
+          <div class="panelTitle">制作人（拆单/派单）</div>
+          <div class="row2">
+            <div class="label">模式</div>
+            <select id="polProducerMode">
+              <option value="rules">规则模式</option>
+              <option value="llm">模型增强</option>
+            </select>
+            <div></div>
+          </div>
+          <div class="row2">
+            <label><input type="checkbox" id="polProducerSplit" /> 自动拆单</label>
+            <label><input type="checkbox" id="polProducerDispatch" /> 自动派单（立项首包成功后自动入队策划→程序→美术→QA）</label>
+            <div class="row2">
+              <div class="label">最大子任务</div>
+              <input id="polProducerMax" type="number" min="1" max="12" value="5" />
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="panelTitle">技术总监（降级/外包）</div>
+          <div class="row2">
+            <div class="label">模式</div>
+            <select id="polTechMode">
+              <option value="rules">规则模式</option>
+              <option value="llm">模型增强</option>
+            </select>
+            <div></div>
+          </div>
+          <div class="row2">
+            <label><input type="checkbox" id="polTechOutsource" /> 自动外包</label>
+            <label><input type="checkbox" id="polTechPauseOnErrors" /> 出错暂停</label>
+            <div class="row2">
+              <div class="label">首包阈值(ms)</div>
+              <input id="polTechFirstChunk" type="number" min="200" max="10000" value="1800" />
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="panelTitle">创意总监（验收门禁）</div>
+          <div class="row2">
+            <div class="label">模式</div>
+            <select id="polCreativeMode">
+              <option value="rules">规则模式</option>
+              <option value="llm">模型增强</option>
+            </select>
+            <div></div>
+          </div>
+          <div class="row2">
+            <label><input type="checkbox" id="polCreativeGatePreview" /> 无预览不通过</label>
+            <label><input type="checkbox" id="polCreativeRequireAC" /> 需要验收点</label>
+            <div></div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="panelTitle">模型路由（执行 / 会议）</div>
+          <div class="muted">省钱=本地+本地；均衡=执行本地+会议云端；高质量=双云端。三总监执行派单时走会议侧（招聘卡片「绑定」可覆盖个体）。</div>
+          <div class="row2">
+            <label><input type="radio" name="modelTier" value="save" /> 省钱</label>
+            <label><input type="radio" name="modelTier" value="balance" checked /> 均衡</label>
+            <label><input type="radio" name="modelTier" value="quality" /> 高质量</label>
+            <button type="button" id="modelTierSave">保存路由</button>
+          </div>
+
+          <div class="hr"></div>
+          <div class="row2">
+            <button id="polSave" class="btnPrimary">保存策略</button>
+            <button id="polReload">重新加载</button>
+            <div id="polOut" class="muted"></div>
+          </div>
+        </div>
+        <div id="drawer_meeting" class="drawerSection">
+          <div class="panelTitle">会议室（立项 / 章程 / 变更）</div>
+          <div class="row2">
+            <div class="label">项目</div>
+            <select id="meetingProject"></select>
+            <button type="button" id="meetingRefreshCharter">刷新</button>
+          </div>
+          <div class="segTabs">
+            <button type="button" class="segBtn isActive" data-meeting-tab="kickoff">立项</button>
+            <button type="button" class="segBtn" data-meeting-tab="charter">章程</button>
+            <button type="button" class="segBtn" data-meeting-tab="change">变更</button>
+          </div>
+          <div id="meetingTab_kickoff" class="recruitTab isActive">
+            <input id="meetingTopic" class="w100" placeholder="立项主题：要做的游戏/方向" />
+            <label class="muted" style="display: flex; align-items: center; gap: 8px; margin: 8px 0; cursor: pointer">
+              <input type="checkbox" id="meetingSkipLlm" />
+              跳过模型，只用规则脚本（外接 API 受限或本地很慢时勾选，避免界面长时间无响应）
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 8px; margin: 8px 0; cursor: pointer">
+              <input type="checkbox" id="meetingAutoKickoff" checked />
+              立项通过后自动生成「首包」任务并入队（衔接执行队列，可关）
+            </label>
+            <div class="row2">
+              <button type="button" id="meetingStart">开始会议</button>
+              <button type="button" id="meetingPingLlm">检测会议模型</button>
+              <button type="button" id="meetingApprove" class="btnPrimary">立项通过（生成章程草稿）</button>
+            </div>
+            <div id="meetingPingOut" class="muted" style="margin: 6px 0"></div>
+            <div id="meetingAdvice" class="cardBody muted">
+              没有模型时：章程、任务队列、预览、策略仍可用来搭流程；接上模型后，派单与会议才有「智能发言」。开始会议默认走会议路由（约 60s 超时则规则兜底）。外接推荐 Moonshot 开放平台；Kimi Code 线易 403。省钱档 = 会议走本地。不确定请先点「检测会议模型」。
+            </div>
+          </div>
+          <div id="meetingTab_charter" class="recruitTab">
+            <div class="label">目标</div>
+            <textarea id="charterGoal" class="previewText" rows="3"></textarea>
+            <div class="label">里程碑（每行一条）</div>
+            <textarea id="charterMilestones" class="previewText" rows="4"></textarea>
+            <div class="label">节点 / 验收点（每行一条）</div>
+            <textarea id="charterNodes" class="previewText" rows="5"></textarea>
+            <div class="row2">
+              <button type="button" id="charterSaveDraft">保存草稿</button>
+              <button type="button" id="charterArchive" class="btnPrimary">归档新版本</button>
+            </div>
+            <div id="charterActionOut" class="muted" style="margin: 6px 0; min-height: 1.2em"></div>
+            <div id="charterOut" class="muted"></div>
+          </div>
+          <div id="meetingTab_change" class="recruitTab">
+            <div id="changePending" class="cardBody">-</div>
+            <div class="row2">
+              <button type="button" id="changeClear">清空偏离提醒</button>
+              <button type="button" id="changeGoCharter">去章程页</button>
+            </div>
+          </div>
+        </div>
+        <div id="drawer_recruit" class="drawerSection">
+          <div class="panelTitle">招聘中心</div>
+          <div class="segTabs">
+            <button class="segBtn isActive" data-recruit-tab="market">市场</button>
+            <button class="segBtn" data-recruit-tab="dispatch">派单</button>
+            <button class="segBtn" data-recruit-tab="diagnose">体检</button>
+          </div>
+
+          <div id="recruitTab_market" class="recruitTab isActive">
+            <div class="muted">默认全员在岗（与仓库 Agent 列表同步）；可单独解雇以缩小园区显示。刷新后雇佣状态会记住。</div>
+            <div class="row2">
+              <div class="label">筛选</div>
+              <select id="hireFilter"></select>
+              <label class="chk" style="justify-self:end;">
+                <input id="hireEarlyMode" type="checkbox" checked />
+                <span>初期模式(每类1人)</span>
+              </label>
+            </div>
+            <div class="row2">
+              <div class="label">搜索</div>
+              <input id="hireSearch" placeholder="输入岗位/英文ID关键词" />
+              <button type="button" id="hireClear">清空</button>
+              <button type="button" id="hireSyncAll" class="btnPrimary">全员在岗</button>
+            </div>
+            <div id="hireList" class="list"></div>
+          </div>
+
+          <div id="recruitTab_dispatch" class="recruitTab">
+            <div class="row2">
+              <div class="label">Provider</div>
+              <select id="providerSelect"></select>
+              <button id="bindProvider">绑定</button>
+            </div>
+            <div class="row2">
+              <div class="label">Agent</div>
+              <select id="agentSelect"></select>
+              <div></div>
+            </div>
+            <input id="task" placeholder="一句话任务" />
+            <div class="row2">
+              <div class="label">优先级</div>
+              <input id="priority" type="number" value="0" />
+              <button id="enqueue">入队</button>
+            </div>
+            <div class="muted" id="queueOut"></div>
+          </div>
+
+          <div id="recruitTab_diagnose" class="recruitTab">
+            <div class="row2">
+              <div class="label">ComputeSlots</div>
+              <input id="slots" type="number" min="1" max="8" value="1" />
+              <button id="saveSlots">保存</button>
+            </div>
+            <div class="row2">
+              <label class="chk">
+                <input id="autoOutsource" type="checkbox" />
+                <span>自动外包（本地卡/不可用时转云端）</span>
+              </label>
+              <div></div>
+              <button id="saveAutoOutsource">保存</button>
+            </div>
+            <div class="row2">
+              <button id="bench">体检(粗测)</button>
+              <div id="benchOut" class="muted"></div>
+            </div>
+            <div class="row2">
+              <button id="benchSweep">体检(阶梯)</button>
+              <div id="benchSweepOut" class="muted"></div>
+            </div>
+            <div class="hr"></div>
+            <div class="muted" id="sysProfile">设备：-</div>
+            <div class="muted" id="adviceOut">建议：-</div>
+            <div class="row2">
+              <button id="applyAdvice">一键应用建议</button>
+              <div class="muted" id="applyAdviceOut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+        <div id="drawer_tasks" class="drawerSection">
+          <div class="panelTitle">队列 / 运行中</div>
+          <div class="muted" id="queueDetail">-</div>
+        </div>
+        <div id="drawer_finance" class="drawerSection">
+          <div class="panelTitle">财务看板（估算）</div>
+          <div class="row2">
+            <div class="label">今日 tokens(估)</div>
+            <div id="finTokens" class="muted">-</div>
+          </div>
+          <div class="row2">
+            <div class="label">今日请求</div>
+            <div id="finReq" class="muted">-</div>
+          </div>
+          <div class="row2">
+            <div class="label">今日失败</div>
+            <div id="finFail" class="muted">-</div>
+          </div>
+          <div class="row2">
+            <div class="label">失败原因</div>
+            <div id="finFailReason" class="muted">-</div>
+          </div>
+          <div class="row2">
+            <div class="label">提供方分布</div>
+            <div id="finReqByProvider" class="muted">-</div>
+          </div>
+          <div class="row2">
+            <div class="label">今日成本</div>
+            <div id="finCost" class="muted">-</div>
+          </div>
+          <div class="hr"></div>
+          <div class="row2">
+            <button id="finReset" class="btnWarn">清空并重新开始（今日）</button>
+            <div class="muted" id="finResetOut"></div>
+          </div>
+          <div class="hr"></div>
+          <div class="muted">提示：后续接上游 usage 后会更准</div>
+        </div>
+        <div id="drawer_notify" class="drawerSection">
+          <div class="panelTitle">系统通知（秘书）</div>
+          <div id="notifyList" class="log"></div>
+        </div>
+        <div id="drawer_sandbox" class="drawerSection">
+          <div class="panelTitle" style="background: linear-gradient(90deg, rgba(99,102,241,0.2), rgba(6,182,212,0.1)); margin: 0">
+            <span>沙盘看板</span>
+            <span id="sandboxClock" style="float:right;font-size:11px;color:var(--accent-cyan)">Sprint 1 · 第 3 天</span>
+          </div>
+          <div class="segTabs">
+            <button class="segBtn isActive" data-sandbox-tab="scoreboard">绩效排行</button>
+            <button class="segBtn" data-sandbox-tab="pipeline">任务流水线</button>
+            <button class="segBtn" data-sandbox-tab="workflow">工作流</button>
+            <button class="segBtn" data-sandbox-tab="orchestrator">编排</button>
+            <button class="segBtn" data-sandbox-tab="sprint">Sprint 进度</button>
+          </div>
+          <!-- Tab: 绩效排行 -->
+          <div id="sandboxTab_scoreboard" class="sandboxTab isActive">
+            <div class="scoreboardHeader">
+              <span style="width:50px">排名</span>
+              <span style="flex:1">部门</span>
+              <span class="scoreMetric">产出</span>
+              <span class="scoreMetric">通过率</span>
+              <span class="scoreMetric">负载</span>
+              <span class="scoreMetric">综合分</span>
+            </div>
+            <div id="scoreboardBody" class="scoreboardBody"></div>
+            <div class="hr"></div>
+            <div class="muted" id="scoreboardUpdated" style="text-align:right">实时更新中…</div>
+          </div>
+          <!-- Tab: 任务流水线 -->
+          <div id="sandboxTab_pipeline" class="sandboxTab">
+            <div class="pipelineView">
+              <div class="pipelineStage" data-stage="design">
+                <div class="pipelineLabel">策划/设计</div>
+                <div class="pipelineCount" id="pipeCount_design">0</div>
+                <div class="pipelineSub">运行中 · 排队</div>
+              </div>
+              <div class="pipelineArrow">→</div>
+              <div class="pipelineStage" data-stage="programming">
+                <div class="pipelineLabel">程序/工程</div>
+                <div class="pipelineCount" id="pipeCount_programming">0</div>
+                <div class="pipelineSub">运行中 · 排队</div>
+              </div>
+              <div class="pipelineArrow">→</div>
+              <div class="pipelineStage" data-stage="art_audio">
+                <div class="pipelineLabel">美术/音频</div>
+                <div class="pipelineCount" id="pipeCount_art_audio">0</div>
+                <div class="pipelineSub">运行中 · 排队</div>
+              </div>
+              <div class="pipelineArrow">→</div>
+              <div class="pipelineStage" data-stage="qa_release">
+                <div class="pipelineLabel">QA/发布</div>
+                <div class="pipelineCount" id="pipeCount_qa_release">0</div>
+                <div class="pipelineSub">运行中 · 排队</div>
+              </div>
+            </div>
+            <div class="hr"></div>
+            <div class="muted">流水线瓶颈：<span id="pipelineBottleneck" style="color:var(--accent-amber)">分析中…</span></div>
+            <div id="pipelineFlowLog" class="muted" style="max-height:120px;overflow:auto;font-size:11px"></div>
+          </div>
+          <!-- Tab: 编排 -->
+          <div id="sandboxTab_orchestrator" class="sandboxTab">
+            <div class="orchLayout">
+              <div class="orchSidebar">
+                <div class="panelTitle">Agent 节点</div>
+                <div class="orchAgents" id="orchAgents"></div>
+                <div class="hr"></div>
+                <div class="panelTitle">工具节点</div>
+                <div class="orchTools">
+                  <div class="orchNodeCard" data-node-type="start" draggable="true">
+                    <span style="color:var(--accent-green)">⏵</span> 起点
+                  </div>
+                  <div class="orchNodeCard" data-node-type="condition" draggable="true">
+                    <span style="color:var(--accent-amber)">◇</span> 条件分支
+                  </div>
+                  <div class="orchNodeCard" data-node-type="approval" draggable="true">
+                    <span style="color:var(--accent-pink)">✋</span> 审批
+                  </div>
+                  <div class="orchNodeCard" data-node-type="end" draggable="true">
+                    <span style="color:var(--accent-cyan)">⏺</span> 终点
+                  </div>
+                </div>
+                <div class="hr"></div>
+                <button id="orchSave" class="menuBtn w100">保存流程</button>
+                <button id="orchExecute" class="btnPrimary w100" style="margin-top:4px">执行流程</button>
+                <div id="orchActionOut" class="muted" style="margin-top:4px;font-size:11px"></div>
+              </div>
+              <div class="orchCanvasWrap">
+                <svg id="orchSvg" class="orchSvg"></svg>
+                <div class="orchCanvas" id="orchCanvas" ondrop="event.preventDefault(); window.__orchOnDrop?.(event)" ondragover="event.preventDefault(); window.__orchOnDragOver?.(event)"></div>
+              </div>
+              <div class="orchProperties" id="orchProperties">
+                <div class="panelTitle">节点属性</div>
+                <div class="cardBody muted" id="orchPropsContent">点击画布中节点查看属性</div>
+              </div>
+            </div>
+          </div>
+          <!-- Tab: Sprint 进度 -->
+          <div id="sandboxTab_sprint" class="sandboxTab">
+            <div class="sprintView">
+              <div class="sprintPhaseBar">
+                <div class="sprintPhase active" id="phasePlan">📋 资源分配</div>
+                <div class="sprintPhaseConnector"></div>
+                <div class="sprintPhase" id="phaseExec">⚡ 执行</div>
+                <div class="sprintPhaseConnector"></div>
+                <div class="sprintPhase" id="phaseReview">✅ 验收</div>
+                <div class="sprintPhaseConnector"></div>
+                <div class="sprintPhase" id="phaseRetro">📊 复盘</div>
+              </div>
+              <div class="sprintProgressTrack">
+                <div class="sprintProgressFill" id="sprintProgressFill"></div>
+              </div>
+              <div class="row2" style="justify-content:space-between;margin-top:8px">
+                <span class="muted" id="sprintDayLabel">Day 3 / 7</span>
+                <span class="muted" id="sprintDeadline">截止: --</span>
+              </div>
+              <div class="hr"></div>
+              <div class="label">当前里程碑</div>
+              <div id="sprintMilestone" class="cardBody">尚未设定里程碑</div>
+              <div class="label">风险提示</div>
+              <div id="sprintRisks" class="cardBody muted">暂无风险</div>
+            </div>
+          </div>
+          <!-- Tab: 工作流 -->
+          <div id="sandboxTab_workflow" class="sandboxTab">
+            <div class="label">选择流水线模板</div>
+            <div class="row2">
+              <select id="wfTemplateSelect"></select>
+              <button id="wfLaunch" class="btnPrimary">启动工作流</button>
+            </div>
+            <div id="wfLaunchOut" class="muted" style="margin-bottom:8px"></div>
+            <div class="hr"></div>
+            <div class="label">运行中 / 已完成</div>
+            <div id="wfRunsList" class="cardGrid" style="max-height:320px;overflow-y:auto"></div>
+            <div class="hr"></div>
+            <div class="label">工作流详情</div>
+            <div id="wfRunDetail" class="cardBody muted">选择左侧流水线查看详情</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="menuBar" class="menuBar">
+      <button class="menuBtn" data-open="recruit">招聘</button>
+      <button class="menuBtn" data-open="tasks">队列</button>
+      <button class="menuBtn" data-open="monitor">预览</button>
+      <button class="menuBtn" data-open="finance">财务</button>
+      <button class="menuBtn" data-open="sandbox">📊 沙盘</button>
+      <button class="menuBtn" data-open="notify">通知<span class="menuBadge hidden" id="notifyBadge">0</span></button>
+    </div>
+    <div id="minimapHint" class="minimapHint">小地图：点击跳转</div>
+    <div id="game"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

@@ -1,0 +1,30 @@
+node_modules/
+dist/
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Ignore any other local env variants (keep .env.example)
+.env.*
+!.env.example
+
+# Studio telemetry (local)
+production/session-logs/
+production/session-state/
+production/studio-providers.json
+production/studio-hired.json
+studio_events.jsonl
+
+# Local runtime artifacts (do not open-source by default)
+production/preview/
+production/charter/
+production/policy.json
+production/model-routing.json
+
+# Studio events log may appear under subpackages
+**/studio_events.jsonl
+
+# Workspace build outputs (monorepo)
+apps/*/dist/
+packages/*/dist/
